@@ -5,8 +5,8 @@ import { addComment,getComments,deleteComment } from "../controllers/comments.co
 const router  = express.Router();
 
 
-router.post("/:id/comments", protectRoute, addComment);           // Add comment
-router.get("/:id/comments", protectRoute, getComments);           // Get comments
-router.delete("/:postId/comments/:commentId", protectRoute, deleteComment); // Delete comment
+router.post("/:postId", protectRoute, addComment);           // Add comment
+router.get("/:postId", protectRoute, getComments);           // Get comments
+router.delete("/:commentId", protectRoute, deleteComment); // Delete comment
 
 export default router;

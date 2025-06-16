@@ -13,5 +13,4 @@ router.delete("/:id", protectRoute, deletePost);
 
 router.put("/:id/react", protectRoute, reactToPost);               
 
-
 export default router;

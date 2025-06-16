@@ -1,5 +1,7 @@
 import User from "../models/user.model.js";
 import {sendNotification} from "../utils/notificationSender.js";
+import bcrypt from "bcryptjs";
+import cloudinary from "../utils/cloundinary.config.js";
 export async function getSuggestedUsers(req, res) {
   const userId = req.user._id;
 
@@ -97,5 +99,77 @@ export async function followUser(req, res) {
 
 export async function unfollowUser(req, res) {
   
+  const userId = req.user._id;
+  const userToUnfollowId = req.params.id;
+  
+  try {
 
+    if(!userToUnfollowId) return res.status(400).json({message:"User to UnFollow id is required"});
+
+    const user = await User.findById(userId);
+    const userToUnfollow = await User.findById(userToUnfollowId);
+
+    if(!userToUnfollow) return res.status(400).json({message:"User to UnFollow not found"});
+
+    if(!user.following.includes(userToUnfollowId)) return res.status(400).json({message:"You are not following this user"});
+
+    user.following.pull(userToUnfollowId);
+    await user.save();
+
+    userToUnfollow.followers.pull(userId);
+    await userToUnfollow.save();
+
+    res.status(200).json({message:"User unfollowed successfully"});
+
+  } catch (error) {
+
+    console.log("Error in unfollow user controller", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+
+}
+
+export async function updateUser(req, res) {
+
+  const userId = req.user._id;
+  const userToUpdateId = req.params.id;
+  const { fullName, username, profilePic, role, password } = req.body;
+
+  try {
+
+    if(userToUpdateId !== userId.toString()) return res.status(400).json({message:"Unauthorized - User not found"});
+
+    const user = await User.findById(userId);
+
+    if(!user) return res.status(400).json({message:"User not found"});
+
+    if(fullName) user.fullName = fullName;
+    if(username) user.username = username;
+
+    //update in cloudinary 
+    if(profilePic) {
+      const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+      user.profilePic = uploadedResponse.secure_url;
+    }
+    if(role) user.role = role;
+    
+    if(password){
+
+      if(password.length < 6) return res.status(400).json({message:"Password must be at least 6 characters long"});
+      if(user.googleId || user.facebookId) return res.status(400).json({message:"O Auth users can not update their password"});
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+      
+    } 
+
+    user.updatedAt = Date.now();
+
+    await user.save();
+
+    res.status(200).json({message:"User updated successfully", user});
+
+  }catch (error) {
+    console.log("Error in update user controller", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }

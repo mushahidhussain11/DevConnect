@@ -5,11 +5,17 @@ import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie.js";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import generateUsername from "../utils/usernameGenerator.js";
-import { sendPasswordResetEmail,sendResetSuccessEmail } from "../mailtrap/emails.js";
+import {
+  sendPasswordResetEmail,
+  sendResetSuccessEmail,
+} from "../mailtrap/emails.js";
 import crypto from "crypto";
+import  cloudinary  from "../utils/cloundinary.config.js"
 
 export async function signup(req, res) {
   const { fullName, username, email, password } = req.body;
+
+  let {profilePic} = req.body;
 
   try {
     if (!fullName || !username || !email || !password) {
@@ -40,6 +46,7 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Username already exists" });
     }
 
+
     const idx = Math.floor(Math.random() * 100) + 1;
     const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
 
@@ -68,6 +75,7 @@ export async function signup(req, res) {
 }
 
 export async function login(req, res) {
+
   const { email, password } = req.body;
 
   try {
@@ -76,6 +84,9 @@ export async function login(req, res) {
     }
 
     const user = await User.findOne({ email });
+
+    if(user?.googleId || user?.facebookId) return res.status(400).json({message:"Login with google or facebook"});
+
 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -87,7 +98,11 @@ export async function login(req, res) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    console.log("ok till here ")
+
     generateTokenAndSetCookie(user, res);
+
+    
 
     const responseUser = user.toObject();
     delete responseUser.password;
@@ -146,15 +161,15 @@ export async function forgotPassword(req, res) {
 }
 
 export async function resetPassword(req, res) {
-
   try {
     const { token } = req.params;
-    const { password,confirmPassword } = req.body;
+    const { password, confirmPassword } = req.body;
 
-    if(password !== confirmPassword){
-      return res.status(400).json({message:"Password and confirm password does not match"});
+    if (password !== confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "Password and confirm password does not match" });
     }
-
 
     const user = await User.findOne({
       resetPasswordToken: token,
@@ -178,8 +193,6 @@ export async function resetPassword(req, res) {
 
     await sendResetSuccessEmail(user.email);
 
-   
-
     res
       .status(200)
       .json({ success: true, message: "Password reset successful" });
@@ -196,6 +209,7 @@ export async function socialAuth(req, res) {
   try {
     let userInfo = {};
     let responseUser = {};
+    let img = "";
 
     if (!provider || !token) {
       return res
@@ -204,8 +218,11 @@ export async function socialAuth(req, res) {
     }
 
     if (provider == "google") {
+      
       // Verify Google token
-      const ticket = await googleClient.verifyIdToken({
+      try {
+
+        const ticket = await googleClient.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
@@ -213,30 +230,51 @@ export async function socialAuth(req, res) {
       const payload = ticket.getPayload();
       const username = generateUsername(payload.name, payload.email);
 
+      if(payload?.picture){
+        const uploadedResponse = await cloudinary.uploader.upload(payload.picture);
+			  img = uploadedResponse.secure_url;
+      }
+
       userInfo = {
         username,
         email: payload.email,
         fullName: payload.name,
-        profilePic: payload.picture,
+        profilePic: img,
         googleId: payload.sub,
       };
+
+      } catch (error) {
+        console.log("Error in google auth", error);
+        res.status(401).json({ message: "Invalid or Expire Token" });
+
+      }
     } else if (provider == "facebook") {
       // Verify Facebook Token
-      const fbRes = await axios.get(
+      try {
+        const fbRes = await axios.get(
         `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${token}`
       );
 
       const fbData = fbRes.data;
-      console.log(fbData);
+
+      if(fbData?.picture?.data?.url){
+        const uploadedResponse = await cloudinary.uploader.upload(fbData.picture.data.url);
+        img = uploadedResponse.secure_url;
+      }
       const username = generateUsername(fbData.name, fbData.email);
 
       userInfo = {
         email: fbData.email,
         username,
         fullName: fbData.name,
-        profilePic: fbData.picture.data.url,
+        profilePic: img,
         facebookId: fbData.id,
       };
+
+      } catch (error) {
+        console.log("Error in facebook auth", error);
+        res.status(401).json({ message: "Invalid or Expired Token" });
+      }
     }
 
     // Check If User Exists

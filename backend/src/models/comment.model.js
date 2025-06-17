@@ -10,6 +10,10 @@ const commentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Post',
     },
+    projectId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+    },
     text: {
         type: String,
         reuiqred: true

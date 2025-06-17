@@ -12,6 +12,10 @@ const postSchema = new mongoose.Schema({
   image:{
     type: String
   },
+  numberOfComments: {
+    type: Number,
+    default: 0
+  },
   reactions: {
     like: [
       {

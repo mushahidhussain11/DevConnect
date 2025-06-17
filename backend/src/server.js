@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import postsRoutes from "./routes/posts.routes.js";
 import commentsRoutes from "./routes/comments.routes.js"
+import projectsRoutes from "./routes/projects.routes.js"
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/posts", postsRoutes);
 app.use("/api/comments",commentsRoutes)
+app.use("/api/projects", projectsRoutes);
 
 
 

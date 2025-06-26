@@ -204,7 +204,7 @@ export async function resetPassword(req, res) {
 
 export async function socialAuth(req, res) {
   const { provider, token } = req.body;
-  const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
   try {
     let userInfo = {};
@@ -222,12 +222,18 @@ export async function socialAuth(req, res) {
       // Verify Google token
       try {
 
-        const ticket = await googleClient.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
+      const googleRes = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      const payload = ticket.getPayload();
+        const payload = googleRes.data;
+
+      
       const username = generateUsername(payload.name, payload.email);
 
       if(payload?.picture){
@@ -305,4 +311,15 @@ export async function socialAuth(req, res) {
 export async function logout(req, res) {
   res.clearCookie("jwt");
   res.status(200).json({ message: "Logout successful" });
+}
+
+export async function getMe(req,res) {
+  const userId = req.user?._id;
+  try {
+    const user = await User.findById(userId).select("-password");
+    res.status(200).json({ message: "User fetched successfully", user });
+  } catch (error) {
+    console.log("Error in getMe Controller", error);
+    res.status(500).json({ message: "Internal server Error" });
+  }
 }

@@ -146,10 +146,10 @@ export async function forgotPassword(req, res) {
 
     // sending reset mail to user's email
 
-    await sendPasswordResetEmail(
-      user.email,
-      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
-    );
+    // await sendPasswordResetEmail(
+    //   user.email,
+    //   `${process.env.CLIENT_URL}/reset-password/${resetToken}`
+    // );
 
     res
       .status(200)
@@ -183,15 +183,17 @@ export async function resetPassword(req, res) {
     }
 
     // update password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    
 
-    user.password = hashedPassword;
+   
+
+    user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiresAt = undefined;
 
     await user.save();
 
-    await sendResetSuccessEmail(user.email);
+    // await sendResetSuccessEmail(user.email);
 
     res
       .status(200)

@@ -1,16 +1,20 @@
-import { Provider, useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { loginUser, socialLogin } from "../../features/auth/authSlice";
-
+import LoadingSpinner from "../LoadingSpinner";
+import { toast } from "react-toastify";
+import { createSocket } from "../../lib/socket";
 const Login = () => {
   const {
     register,
     handleSubmit,
     setError,
+    setValue,
+    clearErrors,
     formState: { errors },
   } = useForm();
 
@@ -24,10 +28,19 @@ const Login = () => {
     console.log("Form Submitted:", data);
 
     try {
-      await dispatch(loginUser(data)).unwrap();
+      const response = await dispatch(loginUser(data)).unwrap();
+      const userId = response?.user?._id;
+
+      if(userId) {
+        const socket = createSocket(userId);
+        socket?.connect();
+      }
+      
+      toast.success("Login successful!");
       navigate("/");
     } catch (error) {
       console.log("Error in Login:", error);
+      toast.error("Login Failed!");
       setError("root", {
         type: "server",
         message: error || "Login failed. Please try again.",
@@ -44,10 +57,18 @@ const Login = () => {
       };
 
       try {
-        await dispatch(socialLogin(payload)).unwrap();
+        const response = await dispatch(socialLogin(payload)).unwrap();
+        const userId = response?.user?._id;
+
+      if(userId) {
+        const socket = createSocket(userId);
+        socket?.connect();
+      }
+        toast.success("Login successful!");
         navigate("/");
       } catch (error) {
         console.log("Error in Social Auth Login:", error);
+        toast.error("Login Failed!");
         setError("root", {
           type: "server",
           message: "Login failed. Please try again.",
@@ -59,13 +80,30 @@ const Login = () => {
     },
   });
 
-  const handleFacebookLogin = (response) => {
-    console.log(response)
+  const handleFacebookLogin = async (response) => {
+    const accessToken = response?.accessToken;
+    const payload = {
+      token: accessToken,
+      provider: "facebook",
+    };
 
     try {
-
+      const response = await dispatch(socialLogin(payload)).unwrap();
+      const userId = response?.user?._id;
+      if(userId) {
+        const socket = createSocket(userId);
+        socket?.connect();
+      }
+      toast.success("Login successful!");
+     
+      navigate("/");
     } catch (error) {
-      
+      console.log("Error in Social Auth Login:", error);
+      toast.error("Login Failed!");
+      setError("root", {
+        type: "server",
+        message: "Login failed. Please try again.",
+      });
     }
   };
 
@@ -88,6 +126,10 @@ const Login = () => {
               placeholder="Email"
               className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm  focus:ring-1 focus:ring-primary focus:outline-none"
               {...register("email", { required: "Email is required" })}
+              onChange={(e) => {
+                clearErrors(["email","root"]); // ✅ clear error
+                setValue("email", e.target.value); 
+              }}
             />
             {errors.email && (
               <p className="text-red-500 text-xs mt-1">
@@ -102,6 +144,10 @@ const Login = () => {
               placeholder="Password"
               className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm  focus:ring-1 focus:ring-primary focus:outline-none"
               {...register("password", { required: "Password is required" })}
+              onChange={(e) => {
+                clearErrors(["password","root"]); // ✅ clear error
+                setValue("password", e.target.value); 
+              }}
             />
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">
@@ -125,9 +171,16 @@ const Login = () => {
           <button
             disabled={isLoading}
             type="submit"
-            className="w-full bg-primary text-white py-2 rounded-md hover:bg-opacity-90 transition-colors text-sm"
+            className="w-full bg-primary text-white py-2 rounded-md hover:bg-opacity-90 transition-colors text-sm flex items-center gap-2 justify-center"
           >
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? (
+              <>
+                <LoadingSpinner />
+                <span>Logging in...</span>
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 

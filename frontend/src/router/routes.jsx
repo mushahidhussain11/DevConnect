@@ -8,8 +8,7 @@ import ResetPasswordPage from "../pages/ResetPasswordPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import PasswordResetSuccessPage from "../pages/PasswordResetSuccessPage";
 import ForgotPasswordConfirmationPage from "../pages/ForgotPasswordConfirmationPage";
-
-const Home = lazy(() => import("../pages/HomePage"));
+import HomePage from "../pages/HomePage";
 
 const routes = [
 
@@ -17,9 +16,9 @@ const routes = [
   { path: "/signup", element: <PublicRoute> <RegisterPage /> </PublicRoute> },
   { path: "/forgot-password", element: <PublicRoute> <ForgotPasswordPage /> </PublicRoute> },
   { path: "/reset-password/:token", element:<PublicRoute> <ResetPasswordPage /> </PublicRoute>  },
-  { path: "/", element: <ProtectedRoute> <Home /> </ProtectedRoute> },
-  { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
-  { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },
+  { path: "/", element: <ProtectedRoute> <HomePage /> </ProtectedRoute> },
+  // { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
+  // { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },
   {path: "*", element: <NotFoundPage />}
 
 ];

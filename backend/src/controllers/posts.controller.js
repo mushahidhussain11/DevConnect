@@ -39,14 +39,17 @@ export async function createPost(req, res) {
 }
 export async function getAllPosts(req, res) {
 
+  console.log(req.cookies)
+
   try {
 
-    const posts = await Post.find({}).sort({createdAt:-1})
+    const posts = await Post.find({}).populate("userId" ,"username fullName role profilePic _id").sort({createdAt:-1})
 
     res.status(200).json({message: "Posts fetched successfully", posts})
 
   } catch (error) {
-
+     console.log("Error in fetching all posts controller", error);
+    res.status(500).json({ message: "Internal server error" });
   }
   
 }
@@ -54,7 +57,7 @@ export async function getPostsById(req, res) {
   const {id} = req.params
   try {
 
-    const posts = await Post.find({userId:id}).sort({createdAt:-1})
+    const posts = await Post.find({userId:id}).sort({createdAt:-1}).populate("userId" ,"username fullName role profilePic _id")
 
     res.status(200).json({message: "Posts fetched successfully", posts})
 

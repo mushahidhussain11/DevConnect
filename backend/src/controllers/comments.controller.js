@@ -55,7 +55,7 @@ export async function getComments(req, res) {
     if (!mongoose.Types.ObjectId.isValid(id))
       return res.status(400).json({ message: "Invalid id" });
 
-    const postComments = await Comment.find({ postId: id }).sort({
+    const postComments = await Comment.find({ postId: id }).populate("userId" ,"fullName profilePic _id").sort({
       createdAt: -1,
     });
     const projectComments = await Comment.find({ projectId: id }).sort({

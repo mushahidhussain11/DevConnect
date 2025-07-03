@@ -1,0 +1,31 @@
+@keyframes shimmer {
+  0% {
+    background-position: -500px 0;
+  }
+  100% {
+    background-position: 500px 0;
+  }
+}
+
+.skeleton-line,
+.skeleton-rect,
+.skeleton-circle {
+  background: linear-gradient(
+    to right,
+    #eeeeee 8%,
+    #dddddd 18%,
+    #eeeeee 33%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+.skeleton-rect {
+  background-size: 1200px 100%;
+}
+
+.skeleton-circle {
+  border-radius: 9999px;
+  background-size: 1000px 100%;
+}

@@ -13,7 +13,6 @@ export async function socketHandlers(socket, io) {
     console.log(`🟢 User connected: ${userId} -> ${socket.id}`);
   }
 
-  console.log(onlineUsers)
 
   // 📥 User created (after signup/login/oauth)
   socket.on("user-created", (userData) => {
@@ -110,7 +109,6 @@ export async function socketHandlers(socket, io) {
     // Remove from onlineUsers map
     onlineUsers.forEach((sid, uid) => {
       if (sid === socket.id) onlineUsers.delete(uid);
-        console.log(onlineUsers)
     });
   });
 

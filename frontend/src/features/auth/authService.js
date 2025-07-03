@@ -51,6 +51,14 @@ class AuthService {
 
     return res.data;
   }
+
+   async logout() {
+    const res = await axios.post("/api/auth/logout",{}, {
+        withCredentials: true,
+      }
+    );
+    return res.data;
+  }
 }
 
 export default new AuthService();

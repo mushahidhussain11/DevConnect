@@ -6,7 +6,7 @@ const router  = express.Router();
 
 
 router.post("/:id", protectRoute, addComment);           // Add comment
-router.get("/:id", protectRoute, getComments);           // Get comments
+router.get("/:id",protectRoute,  getComments);           // Get comments
 router.delete("/:commentId", protectRoute, deleteComment); // Delete comment
 
 export default router;

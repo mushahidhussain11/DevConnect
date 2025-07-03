@@ -4,9 +4,9 @@ import { Navigate } from 'react-router-dom';
 import PageLoader from '../components/PageLoader';
 
 const ProtectedRoute = ({children}) => {
-     const { user, loading,isAuthenticated } = useSelector((state) => state.auth);
+     const { user, isLoading,isAuthenticated } = useSelector((state) => state.auth);
 
-      if (loading) return <PageLoader />
+      if (isLoading) return <PageLoader />
     return user && isAuthenticated ? children : <Navigate to="/login" />;
 }
 

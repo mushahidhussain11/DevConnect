@@ -1,8 +1,12 @@
 import React from 'react'
+import MainLayout from '../layouts/MainLayout'
+import PostSection from '../components/posts/PostSection'
 
 const HomePage = () => {
   return (
-    <div>Home</div>
+   <MainLayout>
+    <PostSection />
+   </MainLayout>
   )
 }
 

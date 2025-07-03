@@ -8,6 +8,7 @@ import { loginUser, socialLogin } from "../../features/auth/authSlice";
 import LoadingSpinner from "../LoadingSpinner";
 import { toast } from "react-toastify";
 import { createSocket } from "../../lib/socket";
+import { useState } from "react";
 const Login = () => {
   const {
     register,
@@ -21,10 +22,12 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isLoading } = useSelector((state) => state.auth);
+  // const { isLoading } = useSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
   const FACEBOOK_CLIENT_ID = import.meta.env.VITE_FACEBOOK_CLIENT_ID;
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     console.log("Form Submitted:", data);
 
     try {
@@ -45,6 +48,8 @@ const Login = () => {
         type: "server",
         message: error || "Login failed. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

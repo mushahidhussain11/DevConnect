@@ -3,11 +3,17 @@ import User from "../models/user.model.js";
 import { sendNotification } from "../utils/notificationSender.js";
 import cloudinary from "../utils/cloundinary.config.js";
 import mongoose from "mongoose";
+import fs from "fs"
+import { deletePostComments } from "./comments.controller.js";
 
 export async function createPost(req, res) {
 
+  console.log("Creat post is hitting")
+
   const {text } = req.body
-  let {image} = req.body
+  
+  let image = req?.file
+  let imageURL = null;
 
   try {
 
@@ -18,18 +24,32 @@ export async function createPost(req, res) {
     
 
     if(image){
-      const uploadedResponse = await cloudinary.uploader.upload(image);
-      image = uploadedResponse.secure_url;
+      const uploadedResponse = await cloudinary.uploader.upload(image.path);
+      imageURL = uploadedResponse.secure_url;
+
+
+      fs.unlink(req?.file.path, (err) => {
+        if (err) {
+          console.error("Failed to delete local image:", err);
+        } else {
+          console.log("Local image deleted successfully");
+        }
+      });
+
+
     }
 
-    const post = await Post.create({text, image, userId: req.user?._id})
+    
+
+    const post = await Post.create({text, image:imageURL, userId: req.user?._id})
 
     const user = await User.findById(req.user?._id)
     user.numberOfPosts = user.numberOfPosts + 1
     await user.save()
     
+    const createdPost = await Post.findById(post?._id).populate("userId" ,"username fullName role profilePic _id");
 
-    res.status(200).json({message: "Post created successfully", post})
+    res.status(200).json({message: "Post created successfully", createdPost})
 
   } catch (error) {
     console.log("Error in create post controller", error);
@@ -39,7 +59,6 @@ export async function createPost(req, res) {
 }
 export async function getAllPosts(req, res) {
 
-  console.log(req.cookies)
 
   try {
 
@@ -67,10 +86,12 @@ export async function getPostsById(req, res) {
   
 }
 export async function updatePost(req, res) {
-
+console.log("update post is hitting")
   const {id} = req.params;
 
-  const {text, image} = req.body
+  const {text} = req.body
+
+  const image = req?.file;
 
   try {
 
@@ -92,11 +113,24 @@ export async function updatePost(req, res) {
         await cloudinary.uploader.destroy(post.image.split("/").pop().split(".")[0])
       }
 
-      const uploadedResponse = await cloudinary.uploader.upload(image);
+      const uploadedResponse = await cloudinary.uploader.upload(image.path);
       post.image = uploadedResponse.secure_url;
+
+      fs.unlink(req?.file.path, (err) => {
+        if (err) {
+          console.error("Failed to delete local image:", err);
+        } else {
+          console.log("Local image deleted successfully");
+        }
+      });
+
+      
     }
 
     await post.save()
+
+     
+    
 
     res.status(200).json({message: "Post updated successfully", post})
 
@@ -135,6 +169,8 @@ export async function deletePost(req, res) {
     user.numberOfPosts = user.numberOfPosts - 1
     await user.save()
 
+    await deletePostComments(id)
+
     res.status(200).json({message: "Post deleted successfully", deletedPost})
 
   } catch (error) {
@@ -144,7 +180,7 @@ export async function deletePost(req, res) {
   
 }
 export async function reactToPost(req, res) {
-
+  console.log("reat to  post is hitting")
   const postId = req.params.id;
   const userId = req.user._id;
   const {typeOfReaction} = req.body;

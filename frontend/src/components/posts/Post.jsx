@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { useRef } from "react";
 import useBreakpoint from "../../hooks/useBreakPoint";
-import { MessageCircle, Send, Trash2,Pencil, MoreVertical } from "lucide-react";
+import {
+  MessageCircle,
+  Send,
+  Trash2,
+  Pencil,
+  MoreVertical,
+} from "lucide-react";
 import { ThumbsUp, Heart } from "phosphor-react";
 import { FaLaughSquint } from "react-icons/fa";
 import { GiPartyPopper } from "react-icons/gi";
@@ -9,7 +15,13 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchComments } from "../../features/comments/commentsSlice";
 import { setAndUnsetReaction } from "../../features/posts/postsSlice";
-import {addComment} from "../../features/comments/commentsSlice";
+import { addComment } from "../../features/comments/commentsSlice";
+import { deleteComment } from "../../features/comments/commentsSlice";
+import DeleteCommentModal from "../DeleteCommentModal";
+import LoadingSpinner from "../LoadingSpinner";
+import { updatePost } from "../../features/posts/postsSlice";
+import { deletePost } from "../../features/posts/postsSlice";
+import DeletePostModal from "../DeletePostModal";
 
 const reactionTypes = [
   {
@@ -38,18 +50,17 @@ const reactionTypes = [
   },
 ];
 
-const Post = ({ post,currentUser }) => {
+const Post = ({ post, currentUser }) => {
   // const isOwnPost = post.userId === currentUser.id;
- 
-  const isOwnPost = post?.userId?._id === currentUser?._id;
-  let currentUserReaction = ""
 
- for(let key in post?.reactions){
-  if(post?.reactions[key].includes(currentUser?._id)){
-    currentUserReaction = key
+  const isOwnPost = post?.userId?._id === currentUser?._id;
+  let currentUserReaction = "";
+
+  for (let key in post?.reactions) {
+    if (post?.reactions[key].includes(currentUser?._id)) {
+      currentUserReaction = key;
+    }
   }
- }
-  
 
   const [reactions, setReactions] = useState({
     like: post?.reactions?.like?.length || 0,
@@ -59,12 +70,11 @@ const Post = ({ post,currentUser }) => {
   });
 
   const dispatch = useDispatch();
-  
 
   const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0);
 
   const [userReaction, setUserReaction] = useState(null);
-  console.log(userReaction)
+  console.log(userReaction);
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentInput, setCommentInput] = useState("");
@@ -77,6 +87,13 @@ const Post = ({ post,currentUser }) => {
   const [editContent, setEditContent] = useState(post?.text);
   const [editImage, setEditImage] = useState(post?.image);
   const [newImageFile, setNewImageFile] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isCommentDeleting, setIsCommentDeleting] = useState(false);
+  const [targetCommentId, setTargetCommentId] = useState(null);
+  const [isPostUpdating, setIsPostUpdating] = useState(false);
+  const [isPostDeleting, setIsPostDeleting] = useState(false);
+  const [showDeletePostModal, setShowDeletePostModal] = useState(false);
+
 
   const postMenuRef = useRef();
   const isTouchDevice = useRef(false);
@@ -84,23 +101,9 @@ const Post = ({ post,currentUser }) => {
   const skipNextLeave = useRef(false);
   const reactionBoxRef = useRef(null);
 
-  useEffect(()=>{
-    setUserReaction(currentUserReaction)
-  },[currentUserReaction])
-  // const [comments, setComments] = useState([
-  //   {
-  //     name: "Alice",
-  //     text: "Great post!",
-  //     avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-  //     self: false,
-  //   },
-  //   {
-  //     name: "You",
-  //     text: "Nice work 👏",
-  //     avatar: "https://randomuser.me/api/portraits/men/15.jpg",
-  //     self: true,
-  //   },
-  // ]);
+  useEffect(() => {
+    setUserReaction(currentUserReaction);
+  }, [currentUserReaction]);
 
   const [comments, setComments] = useState([]);
 
@@ -155,7 +158,7 @@ const Post = ({ post,currentUser }) => {
     const timer = setTimeout(() => {
       setShowReactions(true); // Long press → show reactions
     }, 500);
-    setLongPressTimer(timer);    
+    setLongPressTimer(timer);
   };
 
   const handleTouchEnd = () => {
@@ -165,20 +168,19 @@ const Post = ({ post,currentUser }) => {
         handleUserReaction("like"); // Short tap → quick like
       }
     }
-
   };
 
-  const handleUserReaction =  (type) => {
+  const handleUserReaction = (type) => {
     skipNextLeave.current = true;
     setReactionsAnimatingOut(false);
     setShowReactions(false);
 
-    if(userReaction){
-      setReactionToBackend(userReaction)
+    if (userReaction) {
+      setReactionToBackend(userReaction);
     }
 
-    if(!userReaction){
-      setReactionToBackend(type)
+    if (!userReaction) {
+      setReactionToBackend(type);
     }
 
     if (userReaction) {
@@ -198,29 +200,31 @@ const Post = ({ post,currentUser }) => {
 
       setUserReaction(type);
     }
-    
-    
   };
 
-  const setReactionToBackend =  (type) => {
-    
+  const setReactionToBackend = (type) => {
     try {
-    
-       dispatch(setAndUnsetReaction({ type, postId: post?._id }));
+      dispatch(setAndUnsetReaction({ type, postId: post?._id }));
     } catch (error) {
       console.error("Error setting reaction:", error);
     }
-  }
+  };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
 
+    console.log("handling comment starts here")
+    let addedComment = null;
+    const commentInputValue = commentInput;
+    setCommentInput("");
     try {
-      console.log(comments)
-      console.log(commentInput, post?._id)
-      dispatch(addComment({ text: commentInput, postId: post?._id }));
-
-    }catch (error) {
-      console.log("Error in adding comment controller",error);
+      addedComment = await dispatch(
+        addComment({ text: commentInputValue, postId: post?._id })
+      ).unwrap();
+      addedComment = addedComment?.comment;
+      toast.success("Comment added successfully");
+    } catch (error) {
+      toast.error("Failed to add comment");
+      console.log("Error in adding comment controller", error);
     }
 
     if (commentInput.trim()) {
@@ -228,22 +232,94 @@ const Post = ({ post,currentUser }) => {
         ...prev,
         {
           postId: post?._id,
-          text: commentInput,
+          text: addedComment?.text,
+          _id: addedComment?._id,
           userId: {
             _id: currentUser?._id,
             fullName: currentUser?.fullName,
-            profilePic: currentUser?.profilePic
-          }, 
+            profilePic: currentUser?.profilePic,
+          },
           self: true,
         },
       ]);
-      setCommentInput("");
     }
   };
 
-  const deleteComment = (index) => {
-    setComments((prev) => prev.filter((_, i) => i !== index));
+  const handleDeleteComment = async () => {
+    setShowDeleteModal(true);
   };
+
+  const deleteCommentHandler = async (commentId) => {
+    try {
+      setIsCommentDeleting(true);
+      await dispatch(deleteComment({ commentId })).unwrap();
+      setComments((prev) =>
+        prev.filter((comment) => comment?._id !== commentId)
+      );
+      setTargetCommentId(null);
+      toast.success("Comment deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete comment");
+      console.log("Errro in deleting the comment", error);
+    } finally {
+      setShowDeleteModal(false);
+      setIsCommentDeleting(false);
+    }
+  };
+
+  const handleUpdatePost = async (text, newImage) => {
+    if (!text?.trim()) return toast.error("Post content cannot be empty");
+
+    setIsPostUpdating(true);
+
+    try {
+      // ✅ Build FormData payload
+      const formData = new FormData();
+      formData.append("text", text);
+      if (newImage) {
+        formData.append("image", newImage); // File object
+      } // in case needed
+
+      const response = await dispatch(updatePost({ postId: post._id, formData })).unwrap();
+      const updatedPost = response?.post;
+      setEditContent(updatedPost?.text);
+      setEditImage(updatedPost?.image);
+
+      toast.success("Post updated successfully");
+    } catch (error) {
+      console.error("Error in updating the post", error);
+      toast.error("Failed to update post");
+    } finally {
+      setIsPostUpdating(false);
+      setShowEditModal(false);
+    }
+
+
+  };
+
+  const handleDeletePost = async () => {
+    console.log("handleDeletePost");
+    setShowDeletePostModal(true);
+    setShowPostMenu(false);
+  };
+
+  const deletePostHandler = async () => {
+    setIsPostDeleting(true);
+    
+    try {
+      await dispatch(deletePost({ postId: post?._id })).unwrap();
+      toast.success("Post deleted successfully");
+    } catch (error) {
+      console.error("Error in deleting the post", error);
+      toast.error("Failed to delete post");
+    } finally {
+      setShowDeletePostModal(false);
+      setIsPostDeleting(false);
+    }
+  };
+
+
+  
 
   useEffect(() => {
     if (screen === "sm" || screen === "md") {
@@ -257,26 +333,24 @@ const Post = ({ post,currentUser }) => {
 
   const reaction = reactionTypes.find((r) => r.type === userReaction);
 
-  useEffect(()=>{
-    const fetchPostComments =async ()=>{
+  useEffect(() => {
+    const fetchPostComments = async () => {
       try {
         const response = await dispatch(fetchComments(post?._id)).unwrap();
-        
-        setComments(
-  response?.postComments?.map((comment) => ({
-    ...comment,
-    self: comment.userId?._id === currentUser?._id,
-    
-  }))
-);
 
+        setComments(
+          response?.postComments?.map((comment) => ({
+            ...comment,
+            self: comment.userId?._id === currentUser?._id,
+          }))
+        );
       } catch (error) {
         console.log("Error in fetching comments", error);
       }
-    }
+    };
 
     fetchPostComments();
-  },[dispatch,post?._id])
+  }, [dispatch, post?._id]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -331,8 +405,12 @@ const Post = ({ post,currentUser }) => {
             className="w-10 h-10 rounded-full object-cover"
           />
           <div>
-            <h4 className="font-semibold text-gray-800">{post?.userId?.fullName}</h4>
-            <p className="text-sm text-gray-500">{post?.userId?.role || "User"}</p>
+            <h4 className="font-semibold text-gray-800">
+              {post?.userId?.fullName}
+            </h4>
+            <p className="text-sm text-gray-500">
+              {post?.userId?.role || "User"}
+            </p>
           </div>
         </div>
 
@@ -351,10 +429,7 @@ const Post = ({ post,currentUser }) => {
                 className={`absolute right-0 bottom-10 w-36 bg-white border border-gray-200 shadow-lg rounded-lg z-50 animate-fade-in`}
               >
                 <button
-                  onClick={() => {
-                    toast.success("Post deleted successfully.");
-                    setShowPostMenu(false);
-                  }}
+                  onClick={()=> handleDeletePost()}
                   className="w-full text-left px-4 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50  rounded-t-lg transition"
                 >
                   <Trash2 className="w-4 h-4 mr-2 inline-block" /> Delete Post
@@ -376,10 +451,10 @@ const Post = ({ post,currentUser }) => {
       </div>
 
       {/* Content */}
-      <p className="text-gray-800 text-sm mb-3">{post?.text}</p>
+      <p className="text-gray-800 text-sm mb-3">{editContent}</p>
       {post?.image && (
         <img
-          src={post?.image}
+          src={editImage}
           alt="Post"
           className="rounded-lg w-full object-cover max-h-[400px] mb-4"
         />
@@ -462,7 +537,6 @@ const Post = ({ post,currentUser }) => {
                 setCommentsAnimatingOut(false);
               }, 500); // must match animation duration
             } else {
-              console.log("hello");
               setShowComments(true);
               setCommentsAnimatingOut(false);
             }
@@ -504,16 +578,33 @@ const Post = ({ post,currentUser }) => {
                     <p className="text-sm text-gray-700">{comment?.text}</p>
                   </div>
                 </div>
-                {comment.self && (
+                {(comment.self || post?.userId?._id === currentUser?._id) ?  (
                   <button
-                    onClick={() => deleteComment(idx)}
+                    onClick={() => {
+                      setTargetCommentId(comment?._id);
+                      handleDeleteComment();
+                    }}
                     className="text-red-500 hover:text-red-700 transition"
                   >
                     <Trash2 size={16} />
                   </button>
-                )}
+                ) : null}
               </div>
             ))}
+
+            {showDeleteModal && (
+              <DeleteCommentModal
+                isOpen={showDeleteModal}
+                onClose={() => {
+                  setShowDeleteModal(false);
+                  setTargetCommentId(null);
+                }}
+                onDelete={() => deleteCommentHandler(targetCommentId)}
+                isCommentDeleting={isCommentDeleting}
+              />
+            )}
+
+            
           </div>
 
           {/* Comment Input */}
@@ -541,18 +632,30 @@ const Post = ({ post,currentUser }) => {
         </div>
       )}
 
+      {showDeletePostModal && (
+              <DeletePostModal
+                isOpen={showDeletePostModal}
+                onClose={() => {
+                  setShowDeletePostModal(false);
+                }}
+                onDelete={() => deletePostHandler(post?.id)}
+                isPostDeleting={isPostDeleting}
+              />
+            )}
+
+
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex justify-center items-center px-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex justify-center items-center px-4 animate-fade-in sm:mb-2">
           <div className="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4 relative">
             <h3 className="text-lg font-semibold text-gray-800">Edit Post</h3>
 
             {/* Text Area */}
             <textarea
-  value={editContent}
-  onChange={(e) => setEditContent(e.target.value)}
-  className="w-full h-32 border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg p-3 text-sm resize-none outline-none"
-  placeholder="Update your post text..."
-/>
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full h-32 border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg p-3 text-sm resize-none outline-none"
+              placeholder="Update your post text..."
+            />
 
             {/* Image Preview & Upload */}
             <div className="space-y-2">
@@ -590,20 +693,17 @@ const Post = ({ post,currentUser }) => {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // Normally, send `editContent` & `newImageFile` to API
-                  post.text = editContent;
-                  if (newImageFile) {
-                    const newURL = URL.createObjectURL(newImageFile);
-                    post.image = newURL; // only for demo/mock
-                    setEditImage(newURL);
-                  }
-                  toast.success("Post updated successfully.");
-                  setShowEditModal(false);
-                }}
+                onClick={() => handleUpdatePost(editContent, newImageFile)}
                 className="px-4 py-2 text-sm rounded-md bg-primary text-white hover:bg-primary-700"
               >
-                Save Changes
+                {isPostUpdating ? (
+                  <span className="flex items-center gap-2">
+                    <LoadingSpinner className="w-4 h-4" />
+                    <span>Updating...</span>
+                  </span>
+                ) : (
+                  "Save Changes"
+                )}
               </button>
             </div>
           </div>

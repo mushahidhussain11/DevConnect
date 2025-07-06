@@ -311,11 +311,13 @@ export async function socialAuth(req, res) {
 }
 
 export async function logout(req, res) {
+  console.log("logout");
   res.clearCookie("jwt", {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production", // must match
   sameSite: "strict",                            // must match
 });
+  console.log("bbefore sending response logout");
   res.status(200).json({ message: "Logout successful" });
 }
 

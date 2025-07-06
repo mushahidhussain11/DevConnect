@@ -25,8 +25,25 @@ export const fetchComments = createAsyncThunk(
 export const addComment = createAsyncThunk(
   "comments/addComment",
   async (credentials, thunkAPI) => {
+    
     try {
+      console.log("going to hit add comment")
       const response = await commentsService.addComment(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+export const deleteComment = createAsyncThunk(
+  "comments/deleteComment",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await commentsService.deleteComment(credentials);
       console.log(response)
       return response;
     } catch (error) {

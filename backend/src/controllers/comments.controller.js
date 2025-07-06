@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import Comment from "../models/comment.model.js";
 import { sendNotification } from "../utils/notificationSender.js";
 export async function addComment(req, res) {
+
+  console.log("aadd comment api is hitting")
   const userId = req.user?._id;
   const { id } = req.params;
   const { text } = req.body;
@@ -61,7 +63,7 @@ export async function getComments(req, res) {
     const projectComments = await Comment.find({ projectId: id }).sort({
       createdAt: -1,
     });
-    console.log(projectComments);
+   
 
     if (!postComments && !projectComments)
       return res.status(400).json({ message: "Comments not found" });
@@ -149,5 +151,14 @@ export async function deleteComment(req, res) {
   } catch (error) {
     console.log("Error in delete comment controller", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+
+export async function deletePostComments (postId) {
+  try {
+    await Comment.deleteMany({ postId: postId });
+  } catch (error) {
+    console.log("Error in delete post comments controller", error);
   }
 }

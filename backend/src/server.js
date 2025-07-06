@@ -20,15 +20,36 @@ import messageRoutes from "./routes/message.routes.js"
 const app = express();
 const server = http.createServer(app);
 
+server.keepAliveTimeout = 15000;
+server.headersTimeout = 16000;
+
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL;
 
 app.use(cors({
   origin: CLIENT_URL,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  preflightContinue: false, // ✅ handles OPTIONS internally
+  optionsSuccessStatus: 200 // ✅ avoids 204 default
 }));
+
 app.use(express.json());
 app.use(cookieParser());
+
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.originalUrl}`);
+  next();
+});
+
+app.use((req, res, next) => {
+  res.setTimeout(15000, () => {
+    console.warn("❗ Request timed out:", req.originalUrl);
+    res.status(504).json({ message: "Timeout: Request took too long" });
+  });
+  next();
+});
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

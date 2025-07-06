@@ -9,12 +9,12 @@ import "./index.css";
 import { ToastContainer } from 'react-toastify';
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Provider store={store}>
         <ToastContainer />
         <App />
       </Provider>
     </GoogleOAuthProvider>
-  </StrictMode>
+  // </StrictMode>
 );

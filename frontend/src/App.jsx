@@ -23,8 +23,8 @@ useEffect(() => {
         const response = await dispatch(fetchCurrentUser()).unwrap();
       
         if (response?.user?._id) {
-          const socket = createSocket(response?.user?._id);
-          socket?.connect();
+           createSocket(response?.user?._id);
+        
         }
       } catch (error) {
         console.log("Error in Login:", error);

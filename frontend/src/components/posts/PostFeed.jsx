@@ -2,7 +2,6 @@ import Post from "./Post";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchAllPosts } from "../../features/posts/postsSlice";
-import LoadingSpinner from "../LoadingSpinner";
 import PostsSkeleton from "../PostsSkeleton";
 
 const PostFeed = () => {
@@ -11,13 +10,15 @@ const PostFeed = () => {
    const { user } = useSelector((state) => state.auth);
 
   console.log(isLoading);
- 
+
 
   useEffect(() => {
     setTimeout(() => {
       dispatch(fetchAllPosts());
     }, 500);
   }, [dispatch]);
+
+   console.log(posts)
 
 
   if (isLoading ) {

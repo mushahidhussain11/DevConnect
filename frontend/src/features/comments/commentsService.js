@@ -17,6 +17,14 @@ class CommentsService {
     console.log(res.data);
     return res.data;
   }
+
+   async deleteComment(credentials) {
+    const res = await axios.delete(`/api/comments/${credentials?.commentId}`, {
+      withCredentials: true,
+    });
+    console.log(res.data);
+    return res.data;
+  }
   
 }
 

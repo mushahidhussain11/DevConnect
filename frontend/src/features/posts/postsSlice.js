@@ -24,11 +24,56 @@ export const fetchAllPosts = createAsyncThunk(
   }
 );
 
+export const createPost = createAsyncThunk(
+  "posts/createPost",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await postsService.createPost(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
 export const setAndUnsetReaction = createAsyncThunk(
   "posts/setAndUnsetReaction",
   async (credentials, thunkAPI) => {
     try {
       const response = await postsService.setAndUnsetReaction(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+export const updatePost = createAsyncThunk(
+  "posts/updatePost",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await postsService.updatePost(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+export const deletePost = createAsyncThunk(
+  "posts/deletePost",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await postsService.deletePost(credentials);
       console.log(response)
       return response;
     } catch (error) {
@@ -64,7 +109,15 @@ const postsSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       })
-     
+
+       .addCase(deletePost.fulfilled, (state, action) => {
+        state.posts = state.posts.filter(post => post?._id !== action.payload?.deletedPost?._id);
+      })
+
+      .addCase(createPost.fulfilled, (state, action) => {
+        console.log(action.payload);
+        state.posts = [action.payload?.createdPost, ...state.posts];
+      })
      
   },
 });

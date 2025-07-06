@@ -1,20 +1,53 @@
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { createPost } from "../../features/posts/postsSlice";
+import LoadingSpinner from "../LoadingSpinner";
 
 const PostUploader = () => {
+  const dispatch = useDispatch();
+
   const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const inputRef = useRef(null);
+  const [isPostCreating, setIsPostCreating] = useState(false);
+  const [postText, setPostText] = useState("");
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
       setImage(URL.createObjectURL(file));
+      setImageFile(file);
     }
   };
 
   const removeImage = () => {
     setImage(null);
     inputRef.current.value = null;
+  };
+
+  const handleCreatePost = async () => {
+    if (!postText && !imageFile)
+      return toast.error("Text or Image is required");
+    setIsPostCreating(true);
+    const formData = new FormData();
+
+    if (imageFile) formData.append("image", imageFile);
+    if (postText) formData.append("text", postText);
+
+    try {
+      await dispatch(createPost({ formData }));
+      toast.success("Post created successfully");
+      setPostText("");
+      removeImage();
+      setImageFile(null);
+    } catch (error) {
+      console.log("Error in creating post", error);
+      toast.error("Failed to create post");
+    } finally {
+      setIsPostCreating(false);
+    }
   };
 
   return (
@@ -24,6 +57,8 @@ const PostUploader = () => {
         className="w-full resize-none border-none outline-none text-sm text-gray-800 placeholder:text-gray-400"
         rows="3"
         placeholder="What's on your mind?"
+        value={postText}
+        onChange={(e) => setPostText(e.target.value)}
       />
 
       {/* Image Preview */}
@@ -55,8 +90,19 @@ const PostUploader = () => {
         </button>
 
         {/* Post Button */}
-        <button className="bg-[#4C68D5] hover:bg-[#3c56b0] text-white text-sm px-4 py-1.5 rounded-md shadow-sm">
-          Post
+        <button
+          onClick={handleCreatePost}
+          disabled={isPostCreating}
+          className="bg-[#4C68D5] hover:bg-[#3c56b0] text-white text-sm px-4 py-1.5 rounded-md shadow-sm flex items-center gap-2"
+        >
+          {isPostCreating ? (
+            <>
+              <LoadingSpinner className="w-4 h-4" />
+              <span>Posting</span>
+            </>
+          ) : (
+            "Post"
+          )}
         </button>
       </div>
 

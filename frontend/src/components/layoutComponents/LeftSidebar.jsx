@@ -9,15 +9,19 @@ import {
 import { NavLink } from "react-router-dom";
 import useBreakpoint from "../../hooks/useBreakPoint";
 
-const navItems = [
+
+
+const LeftSidebar = ({currentUser}) => {
+
+  
+
+  const navItems = [
   { label: "Home", icon: <Home size={18} />, path: "/" },
-  { label: "Profile", icon: <User size={18} />, path: "/profile" },
+  { label: "Profile", icon: <User size={18} />, path: `/profile/${currentUser?.user?._id}` },
   { label: "Messages", icon: <Mail size={18} />, path: "/messages" },
   { label: "Projects", icon: <FolderKanban size={18} />, path: "/projects" },
   { label: "Notifications", icon: <Bell size={18} />, path: "/notifications" },
 ];
-
-const LeftSidebar = () => {
 
   const screen = useBreakpoint();
 
@@ -26,12 +30,12 @@ const LeftSidebar = () => {
       {/* Profile Section */}
       <div className="flex flex-col items-center text-center">
         <img
-          src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D"
+          src={currentUser?.user?.profilePic}
           alt="User"
           className="w-16 h-16 rounded-full mb-2 object-cover"
         />
-        <div className="font-semibold text-gray-800">Robert Fox</div>
-        <div className="text-sm text-gray-500">Software Engineer</div>
+        <div className="font-semibold text-gray-800">{currentUser?.user?.fullName ? currentUser?.user?.fullName : currentUser?.user?.username}</div>
+        <div className="text-sm text-gray-500">{currentUser?.user?.role ? currentUser?.user?.role : "User"}</div>
       </div>
 
       {/* Navigation */}
@@ -50,7 +54,7 @@ const LeftSidebar = () => {
             <span className="text-sm font-medium">{label}</span>
           </NavLink>
         ))}
-        {screen === "lg" && (
+        {/* {screen === "lg" && (
           <NavLink
             key={"Follow"}
             to={"/suggested-users"}
@@ -63,7 +67,7 @@ const LeftSidebar = () => {
             <UserPlus size={18} />
             <span className="text-sm font-medium">{"Follow"}</span>
           </NavLink>
-        )}
+        )} */}
       </nav>
     </div>
   );

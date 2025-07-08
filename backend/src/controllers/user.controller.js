@@ -1,7 +1,8 @@
 import User from "../models/user.model.js";
-import {sendNotification} from "../utils/notificationSender.js";
+import { sendNotification } from "../utils/notificationSender.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../utils/cloundinary.config.js";
+import fs from "fs";
 export async function getSuggestedUsers(req, res) {
   const userId = req.user._id;
 
@@ -39,20 +40,17 @@ export async function getSearchUsers(req, res) {
   const { name } = req.query;
 
   try {
-
     if (!name || name.trim() === "") {
       return res.status(400).json({ message: "Search query is required." });
     }
 
-    
-      const users = await User.find({
-        fullName: { $regex: name, $options: "i" },
-      }).select("_id fullName username profilePic");
+    const users = await User.find({
+      fullName: { $regex: name, $options: "i" },
+    }).select("_id fullName username profilePic");
 
-      res
-        .status(200)
-        .json({ message: "Search users fetched successfully", users });
-     
+    res
+      .status(200)
+      .json({ message: "Search users fetched successfully", users });
   } catch (error) {
     console.log("Error in get search users controller", error);
     res.status(500).json({ message: "Internal server error" });
@@ -64,19 +62,22 @@ export async function followUser(req, res) {
   const userToFollowId = req.params.id;
 
   try {
+    if (!userToFollowId)
+      return res.status(400).json({ message: "Follower id is required" });
 
-    if(!userToFollowId) return res.status(400).json({message:"Follower id is required"});
-
-    if(userId.equals(userToFollowId)) return res.status(400).json({message:"You can't follow yourself"});
+    if (userId.equals(userToFollowId))
+      return res.status(400).json({ message: "You can't follow yourself" });
 
     const user = await User.findById(userId);
     const userToFollow = await User.findById(userToFollowId);
 
-    
-    if(!userToFollow) return res.status(400).json({message:"User to follower not found"});
-    
+    if (!userToFollow)
+      return res.status(400).json({ message: "User to follower not found" });
 
-    if(userToFollow.followers.includes(userId)) return res.status(400).json({message:"You are already following this user"});
+    if (userToFollow.followers.includes(userId))
+      return res
+        .status(400)
+        .json({ message: "You are already following this user" });
 
     userToFollow.followers.push(userId);
     await userToFollow.save();
@@ -84,13 +85,11 @@ export async function followUser(req, res) {
     user.following.push(userToFollowId);
     await user.save();
 
-    // Trrigger Notification 
+    // Trrigger Notification
 
-    await sendNotification(userId,userToFollowId,"follow");
+    await sendNotification(userId, userToFollowId, "follow");
 
-
-    res.status(200).json({message:"User followed successfully"});
-
+    res.status(200).json({ message: "User followed successfully" });
   } catch (error) {
     console.log("Error in follow user controller", error);
     res.status(500).json({ message: "Internal server error" });
@@ -98,20 +97,25 @@ export async function followUser(req, res) {
 }
 
 export async function unfollowUser(req, res) {
-  
   const userId = req.user._id;
   const userToUnfollowId = req.params.id;
-  
-  try {
 
-    if(!userToUnfollowId) return res.status(400).json({message:"User to UnFollow id is required"});
+  try {
+    if (!userToUnfollowId)
+      return res
+        .status(400)
+        .json({ message: "User to UnFollow id is required" });
 
     const user = await User.findById(userId);
     const userToUnfollow = await User.findById(userToUnfollowId);
 
-    if(!userToUnfollow) return res.status(400).json({message:"User to UnFollow not found"});
+    if (!userToUnfollow)
+      return res.status(400).json({ message: "User to UnFollow not found" });
 
-    if(!user.following.includes(userToUnfollowId)) return res.status(400).json({message:"You are not following this user"});
+    if (!user.following.includes(userToUnfollowId))
+      return res
+        .status(400)
+        .json({ message: "You are not following this user" });
 
     user.following.pull(userToUnfollowId);
     await user.save();
@@ -119,59 +123,72 @@ export async function unfollowUser(req, res) {
     userToUnfollow.followers.pull(userId);
     await userToUnfollow.save();
 
-    res.status(200).json({message:"User unfollowed successfully"});
-
+    res.status(200).json({ message: "User unfollowed successfully" });
   } catch (error) {
-
     console.log("Error in unfollow user controller", error);
     res.status(500).json({ message: "Internal server error" });
   }
-
 }
 
 export async function updateUser(req, res) {
-
   const userId = req.user._id;
   const userToUpdateId = req.params.id;
   const { fullName, username, profilePic, role, password } = req.body;
+  const image = req?.file;
 
   try {
-
-    if(userToUpdateId !== userId.toString()) return res.status(400).json({message:"Unauthorized - User not found"});
+    if (userToUpdateId !== userId.toString())
+      return res.status(400).json({ message: "Unauthorized - User not found" });
 
     const user = await User.findById(userId);
 
-    if(!user) return res.status(400).json({message:"User not found"});
+    if (!user) return res.status(400).json({ message: "User not found" });
 
-    if(fullName) user.fullName = fullName;
-    if(username) user.username = username;
+    if (fullName) user.fullName = fullName;
+    if (username) user.username = username;
 
-    //update in cloudinary 
-    if(profilePic) {
-      const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+    //update in cloudinary
+    if (image) {
+      if (user?.profilePic) {
+        await cloudinary.uploader.destroy(
+          user.profilePic.split("/").pop().split(".")[0]
+        );
+      }
+
+      const uploadedResponse = await cloudinary.uploader.upload(image.path);
       user.profilePic = uploadedResponse.secure_url;
-    }
-    if(role) user.role = role;
-    
-    if(password){
 
-      if(password.length < 6) return res.status(400).json({message:"Password must be at least 6 characters long"});
-      if(user.googleId || user.facebookId) return res.status(400).json({message:"O Auth users can not update their password"});
+      fs.unlink(req?.file.path, (err) => {
+        if (err) {
+          console.error("Failed to delete local image:", err);
+        } else {
+          console.log("Local image deleted successfully");
+        }
+      });
+    }
+
+    if (role) user.role = role;
+
+    if (password) {
+      if (password.length < 6)
+        return res
+          .status(400)
+          .json({ message: "Password must be at least 6 characters long" });
+      if (user.googleId || user.facebookId)
+        return res
+          .status(400)
+          .json({ message: "O Auth users can not update their password" });
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
-      
-    } 
+    }
 
     user.updatedAt = Date.now();
 
     await user.save();
 
-    res.status(200).json({message:"User updated successfully", user});
-
-  }catch (error) {
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
     console.log("Error in update user controller", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
-

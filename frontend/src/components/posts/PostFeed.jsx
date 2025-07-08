@@ -15,10 +15,10 @@ const PostFeed = () => {
   useEffect(() => {
     setTimeout(() => {
       dispatch(fetchAllPosts());
-    }, 500);
+    },);
   }, [dispatch]);
 
-   console.log(posts)
+ 
 
 
   if (isLoading ) {

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { createPost } from "../../features/posts/postsSlice";
 import LoadingSpinner from "../LoadingSpinner";
+import {incrementPostCount} from "../../features/auth/authSlice";
 
 const PostUploader = () => {
   const dispatch = useDispatch();
@@ -37,7 +38,9 @@ const PostUploader = () => {
     if (postText) formData.append("text", postText);
 
     try {
-      await dispatch(createPost({ formData }));
+      await dispatch(createPost({ formData })).then(()=>{
+        dispatch(incrementPostCount())
+      });
       toast.success("Post created successfully");
       setPostText("");
       removeImage();
@@ -51,7 +54,7 @@ const PostUploader = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-4">
+    <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-4 relative bottom-[0.9rem]">
       {/* Post Text */}
       <textarea
         className="w-full resize-none border-none outline-none text-sm text-gray-800 placeholder:text-gray-400"

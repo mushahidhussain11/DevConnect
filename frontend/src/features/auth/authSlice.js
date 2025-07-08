@@ -98,28 +98,48 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk(
-  "auth/logout",
-  async (_, thunkAPI) => {
-    try {
-      const response = await authService.logout();
-      return response;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
+  try {
+    const response = await authService.logout();
+    return response;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(
+      error.response?.data?.message || error.message
+    );
   }
-);
+});
 
 const authSlice = createSlice({
   name: "auth",
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    decrementPostCount(state) {
+      if (state?.user?.user) {
+        state.user.user.numberOfPosts -= 1;
+      }
+    },
+
+    incrementPostCount(state) {
+      if (state?.user?.user) {
+        state.user.user.numberOfPosts += 1;
+      }
+    },
+
+    updateCurrentUserInfo (state,action){
+      
+      if(state?.user?.user){
+        state.user.user = {
+          ...state.user.user,
+          ...action
+        }
+
+
+      }
+    }
+  },
   extraReducers: (builder) => {
     builder
 
-     
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
       })
@@ -226,3 +246,4 @@ const authSlice = createSlice({
 });
 
 export default authSlice.reducer;
+export const { decrementPostCount, incrementPostCount,updateCurrentUserInfo } = authSlice.actions;

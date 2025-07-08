@@ -3,6 +3,8 @@ import postsService from "./postsService";
 
 const initialState = {
   posts: null,
+  userPosts:null,
+  areUserPostsLoading: false,
   isLoading: true,
   isSuccess: false,
   isError: false,
@@ -84,6 +86,21 @@ export const deletePost = createAsyncThunk(
   }
 );
 
+export const fetchUserPosts = createAsyncThunk(
+  "posts/fetchUserPosts",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await postsService.fetchUserPosts(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
 
 
 
@@ -117,6 +134,24 @@ const postsSlice = createSlice({
       .addCase(createPost.fulfilled, (state, action) => {
         console.log(action.payload);
         state.posts = [action.payload?.createdPost, ...state.posts];
+      })
+
+      .addCase(updatePost.fulfilled, (state, action) => {
+        state.posts = state.posts.map(post => post?._id === action.payload?.updatedPost?._id ? action.payload?.updatedPost : post);
+      })
+
+        .addCase(fetchUserPosts.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchUserPosts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.posts = action.payload?.posts;
+      })
+      .addCase(fetchUserPosts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
       })
      
   },

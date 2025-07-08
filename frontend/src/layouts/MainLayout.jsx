@@ -3,12 +3,14 @@ import Navbar from "../components/layoutComponents/Navbar";
 import LeftSidebar from "../components/layoutComponents/LeftSidebar";
 import RightSidebar from "../components/layoutComponents/RightSidebar";
 import MobileBottomNav from "../components/layoutComponents/MobileBottomNav";
+import { useSelector } from "react-redux";
 
 const MainLayout = ({ children }) => {
+  const currentUser = useSelector((state) => state?.auth?.user);
   return (
     <div className="min-h-screen bg-[#FAFBFF] flex flex-col">
       {/* Navbar stays at top */}
-      <Navbar />
+      <Navbar currentUser={currentUser} />
 
       {/* Main content area (uses full screen height minus navbar) */}
       <div className="flex flex-1">
@@ -17,10 +19,9 @@ const MainLayout = ({ children }) => {
           className="hidden lg:block 
             lg:w-[230px] xl:w-[250px]
             bg-white rounded-xl shadow-md
-            ml-4 mt-6 px-4 py-6 border border-gray-200 h-[27rem] xl:h-[25rem]
-            lg:h-[28rem] sticky"
+            ml-4 mt-6 px-4 py-6 border border-gray-200 h-[25rem] sticky"
         >
-          <LeftSidebar />
+          <LeftSidebar currentUser={currentUser} />
         </aside>
 
         {/* Scrollable Post Section */}
@@ -44,7 +45,7 @@ const MainLayout = ({ children }) => {
       </div>
 
       {/* Bottom nav for mobile screens */}
-      <MobileBottomNav />
+      <MobileBottomNav currentUser={currentUser} />
     </div>
   );
 };

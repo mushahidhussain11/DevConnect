@@ -54,6 +54,7 @@ const Login = () => {
   };
 
   const login = useGoogleLogin({
+    
     onSuccess: async (tokenResponse) => {
       console.log("Login Success:", tokenResponse);
       const payload = {
@@ -62,6 +63,7 @@ const Login = () => {
       };
 
       try {
+        setIsLoading(true)
         const response = await dispatch(socialLogin(payload)).unwrap();
         const userId = response?.user?._id;
 
@@ -78,6 +80,8 @@ const Login = () => {
           type: "server",
           message: "Login failed. Please try again.",
         });
+      }finally {
+        setIsLoading(false)
       }
     },
     onError: () => {
@@ -93,6 +97,7 @@ const Login = () => {
     };
 
     try {
+      setIsLoading(true)
       const response = await dispatch(socialLogin(payload)).unwrap();
       const userId = response?.user?._id;
       if(userId) {
@@ -109,6 +114,8 @@ const Login = () => {
         type: "server",
         message: "Login failed. Please try again.",
       });
+    } finally {
+      setIsLoading(false)
     }
   };
 

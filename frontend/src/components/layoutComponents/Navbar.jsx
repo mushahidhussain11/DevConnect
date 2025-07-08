@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { FiLogOut, FiSearch } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../features/auth/authSlice";
 import { toast } from "react-toastify";
 import { getSocket } from "../../lib/socket";
 
-const Navbar = () => {
+const Navbar = ({currentUser}) => {
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
    const dispatch = useDispatch();
- 
+  
  
 
   const handleLogOut = async ()=>{
@@ -70,11 +70,13 @@ const Navbar = () => {
               <Search size={20} />
             </button>
 
+            <Link to={`/profile/${currentUser?.user?._id}`}>
             <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D"
+              src={currentUser?.user?.profilePic}
               alt="User Avatar"
-              className="h-8 w-8 rounded-full object-cover"
+              className="h-8 w-8 rounded-full object-cover hover:cursor-pointer"
             />
+            </Link>
             <button onClick={handleLogOut} className="flex items-center gap-1 px-3 py-1.5 text-white bg-[#4C68D5] hover:bg-[#3c56b0] rounded-md text-sm transition">
               <FiLogOut className="text-sm" />
               Logout

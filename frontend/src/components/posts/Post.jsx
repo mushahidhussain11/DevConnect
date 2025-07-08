@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRef } from "react";
 import useBreakpoint from "../../hooks/useBreakPoint";
+import { decrementPostCount } from "../../features/auth/authSlice";
 import {
   MessageCircle,
   Send,
@@ -12,7 +13,7 @@ import { ThumbsUp, Heart } from "phosphor-react";
 import { FaLaughSquint } from "react-icons/fa";
 import { GiPartyPopper } from "react-icons/gi";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { fetchComments } from "../../features/comments/commentsSlice";
 import { setAndUnsetReaction } from "../../features/posts/postsSlice";
 import { addComment } from "../../features/comments/commentsSlice";
@@ -22,6 +23,7 @@ import LoadingSpinner from "../LoadingSpinner";
 import { updatePost } from "../../features/posts/postsSlice";
 import { deletePost } from "../../features/posts/postsSlice";
 import DeletePostModal from "../DeletePostModal";
+import { Link } from "react-router-dom";
 
 const reactionTypes = [
   {
@@ -268,7 +270,7 @@ const Post = ({ post, currentUser }) => {
   };
 
   const handleUpdatePost = async (text, newImage) => {
-    if (!text?.trim()) return toast.error("Post content cannot be empty");
+    if (!text && !newImage) return toast.error("Post content cannot be empty");
 
     setIsPostUpdating(true);
 
@@ -280,10 +282,9 @@ const Post = ({ post, currentUser }) => {
         formData.append("image", newImage); // File object
       } // in case needed
 
-      const response = await dispatch(updatePost({ postId: post._id, formData })).unwrap();
-      const updatedPost = response?.post;
-      setEditContent(updatedPost?.text);
-      setEditImage(updatedPost?.image);
+       await dispatch(updatePost({ postId: post._id, formData })).unwrap();
+      
+    
 
       toast.success("Post updated successfully");
     } catch (error) {
@@ -307,7 +308,9 @@ const Post = ({ post, currentUser }) => {
     setIsPostDeleting(true);
     
     try {
-      await dispatch(deletePost({ postId: post?._id })).unwrap();
+      await dispatch(deletePost({ postId: post?._id })).unwrap().then(()=>{
+        dispatch(decrementPostCount())
+      });
       toast.success("Post deleted successfully");
     } catch (error) {
       console.error("Error in deleting the post", error);
@@ -399,15 +402,19 @@ const Post = ({ post, currentUser }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 relative">
         <div className="flex items-center gap-3">
+          <Link to={`/profile/${post?.userId?._id}`}>
           <img
             src={post?.userId?.profilePic}
             alt={post?.userId?.username}
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover hover:cursor-pointer"
           />
+          </Link>
           <div>
-            <h4 className="font-semibold text-gray-800">
+            <Link to={`/profile/${post?.userId?._id}`}>
+            <h4 className="font-semibold text-gray-800 hover:cursor-pointer">
               {post?.userId?.fullName}
             </h4>
+            </Link>
             <p className="text-sm text-gray-500">
               {post?.userId?.role || "User"}
             </p>
@@ -451,10 +458,10 @@ const Post = ({ post, currentUser }) => {
       </div>
 
       {/* Content */}
-      <p className="text-gray-800 text-sm mb-3">{editContent}</p>
+      <p className="text-gray-800 text-sm mb-3">{post?.text}</p>
       {post?.image && (
         <img
-          src={editImage}
+          src={post?.image}
           alt="Post"
           className="rounded-lg w-full object-cover max-h-[400px] mb-4"
         />
@@ -566,15 +573,19 @@ const Post = ({ post, currentUser }) => {
                 className="flex items-start justify-between bg-[#EDF1FC] p-3 rounded-xl"
               >
                 <div className="flex gap-3">
+                  <Link to={`/profile/${comment?.userId?._id}`}>
                   <img
                     src={comment?.userId?.profilePic}
                     alt={comment?.userId?.fullName}
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover hover:cursor-pointer"
                   />
+                  </Link>
                   <div>
-                    <p className="text-sm font-semibold text-gray-800">
+                   <Link to={`/profile/${comment?.userId?._id}`}>
+                    <p className="text-sm font-semibold text-gray-800 hover:cursor-pointer">
                       {comment?.userId?.fullName}
                     </p>
+                   </Link>
                     <p className="text-sm text-gray-700">{comment?.text}</p>
                   </div>
                 </div>
@@ -659,7 +670,7 @@ const Post = ({ post, currentUser }) => {
 
             {/* Image Preview & Upload */}
             <div className="space-y-2">
-              {editImage && (
+              {(editImage || newImageFile) && (
                 <img
                   src={
                     newImageFile ? URL.createObjectURL(newImageFile) : editImage

@@ -58,6 +58,13 @@ class PostsService {
     return res.data;
   }
 
+  async fetchUserPosts(credentials) {
+    const res = await axios.get(`/api/posts/${credentials?.id}`, {
+      withCredentials: true,
+    });
+    return res.data;
+  }
+
   
   
 }

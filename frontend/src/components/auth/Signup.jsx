@@ -1,6 +1,6 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 import { useForm } from "react-hook-form";
@@ -22,12 +22,14 @@ const Signup = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading } = useSelector((state) => state.auth);
+  const [isLoading ,setIsLoading ] = useState(false)
   const FACEBOOK_CLIENT_ID = import.meta.env.VITE_FACEBOOK_CLIENT_ID;
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     console.log(data);
     try {
+      
       const response = await dispatch(signUpUser(data)).unwrap();
       const userId = response?.user?._id;
       if (userId) {
@@ -43,6 +45,8 @@ const Signup = () => {
         type: "server",
         message: error || "Signup failed. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -53,6 +57,7 @@ const Signup = () => {
         provider: "google",
       };
       try {
+        setIsLoading(true)
         const response = await dispatch(socialLogin(payload)).unwrap();
         const userId = response?.user?._id;
 
@@ -68,6 +73,8 @@ const Signup = () => {
           type: "server",
           message: "Google signup failed. Please try again.",
         });
+      } finally {
+        setIsLoading(false)
       }
     },
     onError: () => {
@@ -83,6 +90,7 @@ const Signup = () => {
     };
 
     try {
+      setIsLoading(true)
       const response = await dispatch(socialLogin(payload)).unwrap();
       const userId = response?.user?._id;
       if (userId) {
@@ -97,6 +105,8 @@ const Signup = () => {
         type: "server",
         message: "Facebook signup failed. Please try again.",
       });
+    } finally {
+      setIsLoading(false)
     }
   };
 

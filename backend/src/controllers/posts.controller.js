@@ -129,10 +129,12 @@ console.log("update post is hitting")
 
     await post.save()
 
+    const updatedPost = await Post.findById(id).populate("userId" ,"username fullName role profilePic _id");
+
      
     
 
-    res.status(200).json({message: "Post updated successfully", post})
+    res.status(200).json({message: "Post updated successfully", updatedPost})
 
   } catch (error) {
     console.log("Error in update post controller", error);

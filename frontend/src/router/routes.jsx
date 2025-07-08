@@ -9,6 +9,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import PasswordResetSuccessPage from "../pages/PasswordResetSuccessPage";
 import ForgotPasswordConfirmationPage from "../pages/ForgotPasswordConfirmationPage";
 import HomePage from "../pages/HomePage";
+import ProfilePage from "../pages/ProfilePage";
 
 const routes = [
 
@@ -17,6 +18,7 @@ const routes = [
   { path: "/forgot-password", element: <PublicRoute> <ForgotPasswordPage /> </PublicRoute> },
   { path: "/reset-password/:token", element:<PublicRoute> <ResetPasswordPage /> </PublicRoute>  },
   { path: "/", element: <ProtectedRoute> <HomePage /> </ProtectedRoute> },
+  { path: "/profile/:id", element: <ProtectedRoute> <ProfilePage /> </ProtectedRoute> },
   // { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
   // { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },
   {path: "*", element: <NotFoundPage />}

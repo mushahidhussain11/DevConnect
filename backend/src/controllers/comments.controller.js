@@ -76,6 +76,14 @@ export async function getComments(req, res) {
       res
         .status(200)
         .json({ message: "Comments fetched successfully", projectComments });
+    } else if(!postComments?.length > 0 && !projectComments?.length > 0) {
+      res
+        .status(200)
+        .json({ message: "Comments fetched successfully", postComments, projectComments });
+    } else if(postComments?.length > 0 && projectComments?.length > 0) {
+      res
+        .status(200)
+        .json({ message: "Comments fetched successfully", postComments, projectComments });
     }
   } catch (error) {
     console.log("Error in get comments controller", error);

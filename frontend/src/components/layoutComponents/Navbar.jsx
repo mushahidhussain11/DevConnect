@@ -37,7 +37,8 @@ const Navbar = ({currentUser}) => {
       <header className="bg-white w-full shadow-sm border-b sticky top-0 z-50 border border-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Left: Logo + App Name */}
-          <div className="flex items-center gap-2">
+          <Link to="/" >
+          <div className="flex items-center gap-2 hover:cursor-pointer">
             <img
               src="/assets/images/brandLogo.png"
               alt="Logo"
@@ -45,6 +46,7 @@ const Navbar = ({currentUser}) => {
             />
             <h1 className="text-xl font-semibold text-[#4C68D5]">DevConnect</h1>
           </div>
+          </Link>
 
           {/* Middle: Search bar (desktop only) */}
           <div className="hidden md:flex flex-1 mx-6 max-w-md relative">

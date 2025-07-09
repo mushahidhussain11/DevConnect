@@ -3,12 +3,11 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie.js";
 import axios from "axios";
-import { OAuth2Client } from "google-auth-library";
 import generateUsername from "../utils/usernameGenerator.js";
 import {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
-} from "../mailtrap/emails.js";
+} from "../nodemailer/emails.js";
 import crypto from "crypto";
 import  cloudinary  from "../utils/cloundinary.config.js"
 
@@ -145,12 +144,11 @@ export async function forgotPassword(req, res) {
 
     await user.save();
 
-    // sending reset mail to user's email
-
-    // await sendPasswordResetEmail(
-    //   user.email,
-    //   `${process.env.CLIENT_URL}/reset-password/${resetToken}`
-    // );
+    
+    await sendPasswordResetEmail(
+      user.email,
+      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
+    );
 
     res
       .status(200)
@@ -194,7 +192,7 @@ export async function resetPassword(req, res) {
 
     await user.save();
 
-    // await sendResetSuccessEmail(user.email);
+    await sendResetSuccessEmail(user.email);
 
     res
       .status(200)

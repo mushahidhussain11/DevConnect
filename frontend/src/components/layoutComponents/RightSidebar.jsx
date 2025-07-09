@@ -19,7 +19,7 @@ const RightSidebar = () => {
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
       try {
-        if (!suggestedUsers || suggestedUsers.length === 0) {
+        if (!suggestedUsers) {
           setIsLoading(true);
           await dispatch(getSuggestedUsers());
         }

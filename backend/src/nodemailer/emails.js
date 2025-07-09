@@ -1,19 +1,27 @@
-import {mailtrapClient ,sender} from "./mailtrap.config.js";
 import { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE } from "./emailTemplates.js";
+import nodemailer from "nodemailer";
+import "dotenv/config";
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
 
 export const sendPasswordResetEmail = async function (email, resetURL) {
   const recipient = [{ email }];
-
-  console.log(email,resetURL);
-
+  console.log(recipient);
+ 
 
   try {
-    const response = await mailtrapClient.send({
-      from: sender,
-      to: recipient,
+    const response = await transporter.sendMail({
+      from: `"Dev Connect" <${process.env.SMTP_USER}>`,
+      to: email,
       subject: "Reset your password",
       html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
-      category: "Password Reset",
     });
 
 
@@ -25,16 +33,16 @@ export const sendPasswordResetEmail = async function (email, resetURL) {
 };
 
 
+
 export const sendResetSuccessEmail = async (email) => {
 	const recipient = [{ email }];
 
 	try {
-		const response = await mailtrapClient.send({
-			from: sender,
-			to: recipient,
+		const response = await transporter.sendMail({
+			from: `"Dev Connect" <${process.env.SMTP_USER}>`,
+			to: email,
 			subject: "Password Reset Successful",
 			html: PASSWORD_RESET_SUCCESS_TEMPLATE,
-			category: "Password Reset",
 		});
 
 		console.log("Password reset email sent successfully", response);

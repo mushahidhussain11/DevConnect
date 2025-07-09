@@ -491,7 +491,7 @@ const Post = ({ post, currentUser }) => {
           {/* Like Button */}
           <div
             onClick={() => !isMobile && handleUserReaction("like")}
-            className="flex items-center justify-center gap-2 text-gray-600 hover:bg-[#EDF1FC] w-full py-2 rounded-md select-none"
+            className="flex items-center justify-center gap-2 text-gray-600 xl:hover:bg-[#EDF1FC] lg:hover:bg-[#EDF1FC] w-full py-2 rounded-md select-none"
           >
             {userReaction ? (
               <>

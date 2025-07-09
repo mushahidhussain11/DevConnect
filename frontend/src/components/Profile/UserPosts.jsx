@@ -41,8 +41,8 @@ const UserPosts = ({ id }) => {
     ) : (
       <div className="flex flex-col items-center justify-center text-center text-gray-500 py-12">
         
-        <h2 className="text-xl font-semibold mb-2">No Posts Yet</h2>
-        <p className="text-sm">You haven’t shared anything yet. Start posting to share your thoughts!</p>
+        <h2 className="text-xl font-semibold">No Posts Yet</h2>
+        <p className="text-sm ">You haven’t shared anything yet. Start posting to share your thoughts!</p>
       </div>
     )}
   </div>

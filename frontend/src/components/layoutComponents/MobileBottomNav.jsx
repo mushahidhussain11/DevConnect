@@ -8,8 +8,6 @@ import {
   UserPlus
 } from "lucide-react";
 
-
-
 const MobileBottomNav = ({currentUser}) => {
 
   const navItems = [
@@ -18,12 +16,14 @@ const MobileBottomNav = ({currentUser}) => {
   { label: "Projects", icon: FolderKanban, path: "/projects" },
   { label: "Notifications", icon: Bell, path: "/notifications" },
   { label: "Profile", icon: User, path: `/profile/${currentUser?.user?._id}` },
-  { label: "Follow", icon: UserPlus, path: "/folllow" },
+  { label: "Follow", icon: UserPlus, path: "/suggestions" },
+
 ];
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 h-14 bg-white border-t border-gray-200 shadow-md flex justify-around items-center lg:hidden">
       {navItems.map(({ label, icon: Icon, path }) => (
         <NavLink
+          state={path === "/suggestions" ? { fromButton: true } : undefined}
           key={label}
           to={path}
           className={({ isActive }) =>

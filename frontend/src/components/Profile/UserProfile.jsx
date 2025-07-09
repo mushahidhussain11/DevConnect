@@ -18,7 +18,8 @@ const UserProfile = () => {
   console.log(id)
 
   const { user } = useSelector((state) => state.auth);
-  const [profileUser, setProfileUser] = useState(null);
+  const profileUser  = useSelector((state) => state.user.profileUser);
+  // const [profileUser, setProfileUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [postsChecked, setPostsChecked] = useState(true);
   const [projectsChecked, setProjectsChecked] = useState(false);
@@ -29,8 +30,8 @@ const UserProfile = () => {
     const getCurrentProfile = async () => {
     setIsLoading(true);
       try {
-       const res = await dispatch(getProfileUser({id}));
-        setProfileUser(res?.payload?.user);
+        await dispatch(getProfileUser({id}));
+        // setProfileUser(res?.payload?.user);
       } catch (error) {
         console.log(error);
       } finally {
@@ -40,6 +41,7 @@ const UserProfile = () => {
 
     getCurrentProfile();
   }, [dispatch,id]);
+
 
   return (
    <>

@@ -11,7 +11,6 @@ export async function getSuggestedUsers(req, res) {
       _id: { $ne: userId },
       followers: { $nin: [userId] },
     })
-      .limit(5)
       .select("-password");
     res
       .status(200)
@@ -69,7 +68,7 @@ export async function followUser(req, res) {
       return res.status(400).json({ message: "You can't follow yourself" });
 
     const user = await User.findById(userId);
-    const userToFollow = await User.findById(userToFollowId);
+    const userToFollow = await User.findById(userToFollowId).select("-password");
 
     if (!userToFollow)
       return res.status(400).json({ message: "User to follower not found" });
@@ -89,7 +88,7 @@ export async function followUser(req, res) {
 
     await sendNotification(userId, userToFollowId, "follow");
 
-    res.status(200).json({ message: "User followed successfully" });
+    res.status(200).json({ message: "User followed successfully",userToFollow });
   } catch (error) {
     console.log("Error in follow user controller", error);
     res.status(500).json({ message: "Internal server error" });
@@ -107,7 +106,9 @@ export async function unfollowUser(req, res) {
         .json({ message: "User to UnFollow id is required" });
 
     const user = await User.findById(userId);
-    const userToUnfollow = await User.findById(userToUnfollowId);
+    const userToUnfollow = await User.findById(userToUnfollowId).select(
+      "-password"
+    );
 
     if (!userToUnfollow)
       return res.status(400).json({ message: "User to UnFollow not found" });
@@ -123,7 +124,7 @@ export async function unfollowUser(req, res) {
     userToUnfollow.followers.pull(userId);
     await userToUnfollow.save();
 
-    res.status(200).json({ message: "User unfollowed successfully" });
+    res.status(200).json({ message: "User unfollowed successfully",userToUnfollow });
   } catch (error) {
     console.log("Error in unfollow user controller", error);
     res.status(500).json({ message: "Internal server error" });
@@ -178,8 +179,9 @@ export async function updateUser(req, res) {
         return res
           .status(400)
           .json({ message: "O Auth users can not update their password" });
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
+
+      // const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = password;
     }
 
     user.updatedAt = Date.now();

@@ -24,7 +24,7 @@ const UserPosts = ({ id }) => {
     };
 
     getUserPosts();
-  }, [dispatch]);
+  }, [dispatch,id]);
 
   if (isLoading) {
     return Array.from({ length: 5 }).map((_, i) => <UserPostsSkeleton key={i} />);

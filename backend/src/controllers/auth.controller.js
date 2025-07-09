@@ -55,6 +55,7 @@ export async function signup(req, res) {
       username,
       email,
       password,
+      role: "User",
       profilePic: randomAvatar,
     });
 

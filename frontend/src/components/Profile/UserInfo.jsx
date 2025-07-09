@@ -1,5 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Check, Plus } from "lucide-react";
+import { useState,useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { followUser,unfollowUser } from "../../features/user/userSlice";
+import { toast } from "react-toastify";
 
 const UserInfo = ({
   profileUser,
@@ -11,8 +16,21 @@ const UserInfo = ({
   settingsChecked,
   setSettingsChecked,
 }) => {
-  const isCurrentUser = currentUser?._id === profileUser?._id;
 
+  const dispatch = useDispatch();
+  const isCurrentUser = currentUser?._id === profileUser?._id;
+  
+  const [isFollowing, setIsFollowing] = useState(false);
+
+
+  useEffect(() => {
+  if (profileUser?.followers && currentUser?._id) {
+    setIsFollowing(profileUser.followers.includes(currentUser._id));
+  }
+}, [profileUser?.followers, currentUser?._id]);
+
+
+  
 
   const handlePostsClick = () => {
     setPostsChecked(true);
@@ -32,12 +50,30 @@ const UserInfo = ({
     setSettingsChecked(true);
   };
 
+  const handleFollowUnfollow = async (id) => {
+  try {
+
+    if (isFollowing) {
+      await dispatch(unfollowUser(id)).unwrap();
+      setIsFollowing(false);
+      toast.info("User Unfollowed successfully");
+    } else {
+      await dispatch(followUser(id)).unwrap();
+      setIsFollowing(true);
+      toast.success("User Followed successfully");
+    }
+
+  } catch (error) {
+    console.error("Follow/Unfollow Error:", error);
+    toast.error(error.message || "Something went wrong");
+  }
+};
+
   const baseBtnStyle =
     "px-4 sm:px-6 py-2 rounded-lg text-sm font-medium transition";
 
   const activeBtnStyle = "bg-primary text-white hover:bg-primary/90";
-  const inactiveBtnStyle =
-    "bg-gray-200 text-gray-800 hover:bg-gray-300";
+  const inactiveBtnStyle = "bg-gray-200 text-gray-800 hover:bg-gray-300";
 
   return (
     <div className="max-w-3xl mx-auto mt-0 px-4">
@@ -56,7 +92,9 @@ const UserInfo = ({
                 {profileUser?.fullName}
               </h2>
               <p className="text-sm text-gray-500">@{profileUser?.username}</p>
-              <p className="text-sm text-gray-600">{profileUser?.role ?? "User"}</p>
+              <p className="text-sm text-gray-600">
+                {profileUser?.role ?? "User"}
+              </p>
             </div>
           </div>
 
@@ -76,7 +114,9 @@ const UserInfo = ({
             </div>
             <div>
               <p className="text-xl font-semibold text-primary">
-                {isCurrentUser ? currentUser?.numberOfPosts ?? 0 : profileUser?.numberOfPosts ?? 0}
+                {isCurrentUser
+                  ? currentUser?.numberOfPosts ?? 0
+                  : profileUser?.numberOfPosts ?? 0}
               </p>
               <p className="text-sm text-gray-600">Posts</p>
             </div>
@@ -112,6 +152,29 @@ const UserInfo = ({
             >
               {isCurrentUser ? "My Projects" : "Projects"}
             </button>
+            {!isCurrentUser && (
+              <button
+                onClick={()=>handleFollowUnfollow(profileUser?._id)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium hover:cursor-pointer flex items-center gap-2 transition
+    ${
+      isFollowing
+        ? "bg-gray-200 text-gray-700 hover:bg-gray-300 "
+        : "bg-primary text-white hover:bg-primary/90"
+    }`}
+              >
+                {isFollowing ? (
+                  <>
+                    <Check size={16} />
+                    Following
+                  </>
+                ) : (
+                  <>
+                    <Plus size={16} />
+                    Follow
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Settings */}

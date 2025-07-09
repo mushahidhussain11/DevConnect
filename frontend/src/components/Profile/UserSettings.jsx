@@ -6,6 +6,7 @@ import { updateUserInfo } from "../../features/user/userSlice";
 import { updateCurrentUserInfo } from "../../features/auth/authSlice";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../LoadingSpinner";
+import { updateProfileUserInfo } from "../../features/user/userSlice";
 // import { updateUserInfo } from "../../redux/slices/userSlice";
 
 const UserSettings = ({ id }) => {
@@ -64,11 +65,21 @@ const UserSettings = ({ id }) => {
       if (newImage) formData.append("profilePic", newImage);
 
       const res = await dispatch(updateUserInfo({ formData })).unwrap();
-      console.log(res.user);
 
-      // await dispatch(updateCurrentUserInfo({ formData,profilePic })).unwrap()
+      const profilePic = res?.user.profilePic;
+
+      const formDataObj = Object.fromEntries(formData.entries());
+
+      await dispatch(updateCurrentUserInfo({ formDataObj, profilePic }));
+      await dispatch(updateProfileUserInfo({ formDataObj, profilePic }));
       toast.success("User info updated successfully");
-      
+
+      reset({
+        fullName: res?.user?.fullName || "",
+        username: res?.user?.username || "",
+        role: res?.user?.role || "",
+        password: "", // Always keep password field empty
+      });
     } catch (error) {
       console.error("Error in updating user info:", error);
       setError("root", {
@@ -78,8 +89,6 @@ const UserSettings = ({ id }) => {
     } finally {
       setIsLoading(false);
     }
-
-    reset();
   };
 
   const handleImageChange = (e) => {

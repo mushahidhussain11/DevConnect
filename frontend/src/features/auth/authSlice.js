@@ -125,17 +125,28 @@ const authSlice = createSlice({
       }
     },
 
-    updateCurrentUserInfo (state,action){
-      
-      if(state?.user?.user){
+    updateCurrentUserInfo(state, action) {
+      if (state?.user?.user) {
+        // Destructure profilePic if it exists in formDataObj
+        const { profilePic, ...otherFields } = action?.payload?.formDataObj;
+
+        // Update all fields except profilePic
         state.user.user = {
           ...state.user.user,
-          ...action
+          ...otherFields,
+        };
+
+        // If profilePic was in the formData, update it from action.profilePic
+        if (
+          action?.payload?.formDataObj?.hasOwnProperty("profilePic") &&
+          action?.payload?.profilePic
+        ) {
+          state.user.user.profilePic = action?.payload?.profilePic;
         }
-
-
       }
-    }
+    },
+
+    
   },
   extraReducers: (builder) => {
     builder
@@ -246,4 +257,9 @@ const authSlice = createSlice({
 });
 
 export default authSlice.reducer;
-export const { decrementPostCount, incrementPostCount,updateCurrentUserInfo } = authSlice.actions;
+export const {
+  decrementPostCount,
+  incrementPostCount,
+ 
+  updateCurrentUserInfo,
+} = authSlice.actions;

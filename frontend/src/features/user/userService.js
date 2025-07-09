@@ -19,6 +19,40 @@ class UserService {
     });
     return res.data;
   }
+
+  async getSuggestedUsers() {
+  
+  
+    const res = await axios.get(`/api/users/suggestions`, {
+      withCredentials: true,
+    });
+    
+    return res.data;
+  }
+
+   async followUser(credentials) {
+  
+  
+    const res = await axios.put(`/api/users/follow/${credentials}`,{}, {
+      withCredentials: true,
+    });
+    
+    return res.data;
+  }
+
+  async unfollowUser(credentials) {
+  
+  
+    const res = await axios.put(`/api/users/unfollow/${credentials}`,{}, {
+      withCredentials: true,
+    });
+    
+    return res.data;
+  }
+
+  
+
+  
   
 
 }

@@ -42,8 +42,10 @@ app.use((req, res, next) => {
   next();
 });
 
+
+
 app.use((req, res, next) => {
-  res.setTimeout(15000, () => {
+  res.setTimeout(20000, () => {
     console.warn("❗ Request timed out:", req.originalUrl);
     res.status(504).json({ message: "Timeout: Request took too long" });
   });

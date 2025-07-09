@@ -35,7 +35,7 @@ const MainLayout = ({ children }) => {
         {/* Right Sidebar */}
         <aside
           className="hidden lg:block
-            xl:w-[250px] h-[25rem]
+            xl:w-[260px] lg:w-[260px] h-[25rem]
             bg-white rounded-xl shadow-md
             mr-4 mt-6 px-4 py-6 border border-gray-200
              sticky"

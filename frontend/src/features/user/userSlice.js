@@ -4,6 +4,7 @@ import userService from "./userService";
 const initialState = {
   profileUser: null,
   suggestedUsers: null,
+  searchedUsers:null,
   isLoading: true,
   isSuccess: false,
   isError: false,
@@ -75,6 +76,21 @@ export const unfollowUser = createAsyncThunk(
   async (credentials, thunkAPI) => {
     try {
       const response = await userService.unfollowUser(credentials);
+      console.log(response);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+export const getSearchedUsers = createAsyncThunk(
+  "user/getSearchedUsers",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await userService.getSearchedUsers(credentials);
       console.log(response);
       return response;
     } catch (error) {
@@ -175,7 +191,7 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
-      });
+      })
   },
 });
 

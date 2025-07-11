@@ -11,6 +11,7 @@ import ForgotPasswordConfirmationPage from "../pages/ForgotPasswordConfirmationP
 import HomePage from "../pages/HomePage";
 import ProfilePage from "../pages/ProfilePage";
 import SuggestionsPage from "../pages/SuggestionsPage";
+import SearchPage from "../pages/SearchPage";
 
 const routes = [
 
@@ -21,6 +22,7 @@ const routes = [
   { path: "/", element: <ProtectedRoute> <HomePage /> </ProtectedRoute> },
   { path: "/profile/:id", element: <ProtectedRoute> <ProfilePage /> </ProtectedRoute> },
   { path: "/suggestions", element: <ProtectedRoute> <SuggestionsPage /> </ProtectedRoute> },
+  { path: "/search", element: <ProtectedRoute> <SearchPage/> </ProtectedRoute> },
   // { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
   // { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },
   {path: "*", element: <NotFoundPage />}

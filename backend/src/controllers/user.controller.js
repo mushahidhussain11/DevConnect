@@ -45,7 +45,7 @@ export async function getSearchUsers(req, res) {
 
     const users = await User.find({
       fullName: { $regex: name, $options: "i" },
-    }).select("_id fullName username profilePic");
+    }).select("_id fullName username profilePic role followers");
 
     res
       .status(200)

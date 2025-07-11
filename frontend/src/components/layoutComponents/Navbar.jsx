@@ -11,7 +11,21 @@ const Navbar = ({currentUser}) => {
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
    const dispatch = useDispatch();
-  
+
+   const [query, setQuery] = useState("");
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleSearch = () => {
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      navigate(`/search?query=${encodeURIComponent(trimmedQuery)}`);
+    }
+  };
  
 
   const handleLogOut = async ()=>{
@@ -53,10 +67,13 @@ const Navbar = ({currentUser}) => {
             <input
               type="text"
               placeholder="Search"
+               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="w-full pr-10 px-4 py-2 border border-gray-200 rounded-xl 
                      focus:outline-none focus:ring-1 focus:ring-[#4C68D5]"
             />
             <FiSearch
+             onClick={handleSearch}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 
                      text-gray-400 cursor-pointer"
             />
@@ -67,7 +84,9 @@ const Navbar = ({currentUser}) => {
             {/* Mobile Search Icon */}
             <button
               className="block ml-2 md:hidden p-2 text-gray-600 hover:text-[#4C68D5]"
-              onClick={() => setShowSearch(true)}
+              onClick={() => {
+                setShowSearch(true)
+              }}
             >
               <Search size={20} />
             </button>

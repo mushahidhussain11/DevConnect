@@ -50,6 +50,16 @@ class UserService {
     return res.data;
   }
 
+  async getSearchedUsers(credentials) {
+  
+  
+    const res = await axios.get(`/api/users/search?name=${credentials}`, {
+      withCredentials: true,
+    });
+    
+    return res.data;
+  }
+
   
 
   

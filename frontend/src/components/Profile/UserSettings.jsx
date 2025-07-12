@@ -84,7 +84,7 @@ const UserSettings = ({ id }) => {
       console.error("Error in updating user info:", error);
       setError("root", {
         type: "server",
-        message: error.message || "Failed to update user info.",
+        message: error || "Failed to update user info.",
       });
     } finally {
       setIsLoading(false);

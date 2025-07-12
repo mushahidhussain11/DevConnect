@@ -4,6 +4,7 @@ import userService from "./userService";
 const initialState = {
   profileUser: null,
   suggestedUsers: null,
+  notifications: null,
   searchedUsers:null,
   isLoading: true,
   isSuccess: false,
@@ -101,6 +102,36 @@ export const getSearchedUsers = createAsyncThunk(
   }
 );
 
+export const fetchNotifications = createAsyncThunk(
+  "user/fetchNotifications",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await userService.fetchNotifications(credentials);
+      console.log(response);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+export const deleteNotification = createAsyncThunk(
+  "user/deleteNotification",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await userService.deleteNotification(credentials);
+      console.log(response);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+
 
 
 
@@ -188,6 +219,36 @@ const userSlice = createSlice({
         state.suggestedUsers = [...state.suggestedUsers, action.payload?.userToUnfollow];
       })
       .addCase(unfollowUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+
+       .addCase(fetchNotifications.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchNotifications.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.notifications = action.payload?.notifications;
+       
+      })
+      .addCase(fetchNotifications.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+
+        .addCase(deleteNotification.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteNotification.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.notifications = state.notifications.filter(notification => notification?._id !== action.payload?.notification?._id);
+       
+      })
+      .addCase(deleteNotification.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

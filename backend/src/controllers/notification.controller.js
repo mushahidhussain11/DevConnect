@@ -7,7 +7,7 @@ export async function getNotifications (req,res) {
 
         if(userId !== req.user._id.toString()) return res.status(400).json({message:"Unauthorized - User"})
 
-        const notifications = await Notification.find({receiverId:userId}).sort({createdAt:-1})
+        const notifications = await Notification.find({receiverId:userId}).populate("senderId" ,"fullName  profilePic _id").sort({createdAt:-1})
         res.status(200).json({message:"Notifications fetched successfully",notifications})
 
 

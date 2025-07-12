@@ -9,63 +9,21 @@ import { toast } from "react-toastify";
 import { Check } from "lucide-react";
 import SearchUsersSkeleton from "./SearchUsersSkeleton";
 
-const dummyUsers = [
-  {
-    id: 1,
-    fullName: "Mushahid Hussain",
-    role: "Full Stack Developer",
-    profilePic: "https://i.pravatar.cc/150?img=1",
-    isFollowing: false,
-  },
-  {
-    id: 2,
-    fullName: "Ayesha Khan",
-    role: "Frontend Developer",
-    profilePic: "https://i.pravatar.cc/150?img=2",
-    isFollowing: true,
-  },
-  {
-    id: 3,
-    fullName: "Zain Ahmed",
-    role: "Backend Developer",
-    profilePic: "https://i.pravatar.cc/150?img=3",
-    isFollowing: false,
-  },
-  {
-    id: 4,
-    fullName: "Sana Malik",
-    role: "UI/UX Designer",
-    profilePic: "https://i.pravatar.cc/150?img=4",
-    isFollowing: false,
-  },
-  {
-    id: 5,
-    fullName: "Ali Raza",
-    role: "DevOps Engineer",
-    profilePic: "https://i.pravatar.cc/150?img=5",
-    isFollowing: true,
-  },
-  {
-    id: 6,
-    fullName: "Hira Shah",
-    role: "QA Engineer",
-    profilePic: "https://i.pravatar.cc/150?img=6",
-    isFollowing: false,
-  },
-];
+
+  
 
 export default function SearchPage() {
   const dispatch = useDispatch();
   const [searchedUsers, setSearchedUsers] = useState([]);
   const currentUser = useSelector((state) => state.auth.user);
   const [loading, setLoading] = useState(false);
+   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const useQuery = () => {
-    return new URLSearchParams(useLocation().search);
-  };
 
-  const query = useQuery().get("query") || "";
+  console.log("working")
+
+ 
 
   const handleFollowToggle = async (id) => {
     const user = searchedUsers.find((user) => user?._id === id);
@@ -113,14 +71,20 @@ export default function SearchPage() {
     }
   };
 
-  useEffect(() => {
+  
+
+   useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    console.log(queryParams,location);
+    const query = queryParams.get("query") || "";
     setSearchQuery(query);
-  }, [query]);
+  }, [location?.search]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
+        console.log(searchQuery)
         const users = await dispatch(getSearchedUsers(searchQuery)).unwrap();
         setSearchedUsers(users?.users);
       } catch (err) {
@@ -129,7 +93,7 @@ export default function SearchPage() {
       }
     };
 
-    if (searchQuery) fetchUsers();
+   fetchUsers();
   }, [searchQuery]);
 
   return loading ? (
@@ -142,8 +106,8 @@ export default function SearchPage() {
         h-[calc(100vh-5rem)] sm:h-[calc(100vh-5rem)] md:h-[calc(100vh-5rem)] 
         flex flex-col mb-6"
       >
-        <h2 className="text-lg sm:text-xl md:text-xl lg:text-2xl font-semibold text-gray-800 mb-4 sm:mb-5 text-center sm:text-left">
-          Search Users
+        <h2 className="text-lg sm:text-xl md:text-xl lg:text-2xl font-semibold text-primary mb-4 sm:mb-5 text-center sm:text-left">
+          Searched Users
         </h2>
 
         <div className="overflow-y-auto space-y-4 scrollbar-hide pr-1 flex-grow">
@@ -158,7 +122,7 @@ export default function SearchPage() {
                 <div
                   key={user?._id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between 
-                p-3 sm:p-4 md:p-4 transition hover:bg-gray-100 rounded-xl"
+                p-3 sm:p-4 md:p-4 transition hover:shadow-md rounded-lg border border-gray-200"
                 >
                   <Link
                     to={`/profile/${user?._id}`}
@@ -168,7 +132,7 @@ export default function SearchPage() {
                       <img
                         src={user?.profilePic}
                         alt={user?.fullName}
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover shadow-sm"
+                        className="w-8 h-8 sm:w-14 sm:h-14 rounded-full object-cover shadow-sm"
                       />
                       <div>
                         <p className="font-semibold text-gray-900 text-base sm:text-[1rem]">

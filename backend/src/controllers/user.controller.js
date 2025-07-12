@@ -168,6 +168,8 @@ export async function updateUser(req, res) {
       });
     }
 
+    console.log(user)
+
     if (role) user.role = role;
 
     if (password) {
@@ -178,7 +180,7 @@ export async function updateUser(req, res) {
       if (user.googleId || user.facebookId)
         return res
           .status(400)
-          .json({ message: "O Auth users can not update their password" });
+          .json({ message: "Users signed in with Google or Facebook can not update their password." });
 
       // const hashedPassword = await bcrypt.hash(password, 10);
       user.password = password;

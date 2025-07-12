@@ -60,6 +60,27 @@ class UserService {
     return res.data;
   }
 
+  async fetchNotifications(credentials) {
+  
+  
+    const res = await axios.get(`/api/notifications/${credentials}`, {
+      withCredentials: true,
+    });
+    
+    return res.data;
+  }
+
+  async deleteNotification(credentials) {
+  
+  
+    const res = await axios.delete(`/api/notifications/${credentials}`, {
+      withCredentials: true,
+    });
+    
+    return res.data;
+  }
+  
+
   
 
   

@@ -60,7 +60,7 @@ export async function getComments(req, res) {
     const postComments = await Comment.find({ postId: id }).populate("userId" ,"fullName profilePic _id").sort({
       createdAt: -1,
     });
-    const projectComments = await Comment.find({ projectId: id }).sort({
+    const projectComments = await Comment.find({ projectId: id }).populate("userId" ,"fullName profilePic _id").sort({
       createdAt: -1,
     });
    
@@ -168,5 +168,13 @@ export async function deletePostComments (postId) {
     await Comment.deleteMany({ postId: postId });
   } catch (error) {
     console.log("Error in delete post comments controller", error);
+  }
+}
+
+export async function deleteProjectComments (projectId) {
+  try {
+    await Comment.deleteMany({ projectId: projectId });
+  } catch (error) {
+    console.log("Error in delete project comments controller", error);
   }
 }

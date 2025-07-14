@@ -2,10 +2,12 @@ import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
 import cloudinary from "../utils/cloundinary.config.js";
 import mongoose from "mongoose";
+import {sendNotification} from "../utils/notificationSender.js";
+import fs from "fs";
 
 export async function getAllProjects(req, res) {
   try {
-    const projects = await Project.find({}).sort({ createdAt: -1 });
+    const projects = await Project.find({}).populate("userId", "username fullName role profilePic _id").sort({ createdAt: -1 });
 
     res
       .status(200)
@@ -21,7 +23,7 @@ export async function getProjectsById(req, res) {
     if (!mongoose.Types.ObjectId.isValid(id))
       return res.status(400).json({ message: "Invalid  id" });
 
-    const projects = await Project.find({ userId: id }).sort({ createdAt: -1 });
+    const projects = await Project.find({ userId: id }).sort({ createdAt: -1 }).populate("userId", "username fullName role profilePic _id");
 
     res
       .status(200)
@@ -39,9 +41,17 @@ export async function createProject(req, res) {
     techStack,
     repoLink,
     liveDemoLink,
-    thumbnails,
     tags,
   } = req.body;
+
+  console.log("it hits")
+
+  console.log(req?.files)
+  console.log(req?.body)
+
+  const thumbnails = req?.files.map((file) => file?.path);
+
+
 
   try {
     if (!title || !description)
@@ -50,13 +60,26 @@ export async function createProject(req, res) {
         .json({ message: "Title and description fields are required" });
 
     if (thumbnails) {
-      for (let i = 0; i < thumbnails.length; i++) {
-        const uploadedResponse = await cloudinary.uploader.upload(
-          thumbnails[i]
-        );
-        thumbnails[i] = uploadedResponse.secure_url;
-      }
-    }
+  const uploadPromises = thumbnails.map((thumb, i) =>
+    cloudinary.uploader.upload(thumb).then((uploadedResponse) => {
+      // delete local file after upload
+      fs.unlink(thumb, (err) => {
+        if (err) {
+          console.error("Failed to delete local image:", err);
+        } else {
+          console.log("Local image deleted successfully");
+        }
+      });
+      return uploadedResponse.secure_url;
+    })
+  );
+
+  // Wait for all uploads to finish in parallel
+  const uploadedUrls = await Promise.all(uploadPromises);
+  thumbnails.splice(0, thumbnails.length, ...uploadedUrls); // Replace old paths with URLs
+}
+
+
 
     const newProject = await new Project({
       userId,
@@ -85,15 +108,21 @@ export async function createProject(req, res) {
 }
 export async function updateProject(req, res) {
   const projectId = req.params.id;
+
+  console.log(req.body)
   const {
     title,
     description,
     techStack,
     repoLink,
     liveDemoLink,
-    thumbnails,
+    removedImages,
     tags,
   } = req.body;
+
+
+
+  const thumbnails = req?.files.map((file) => file?.path);
 
   try {
     if (!mongoose.Types.ObjectId.isValid(projectId))
@@ -107,38 +136,67 @@ export async function updateProject(req, res) {
         .status(400)
         .json({ message: "You are not authorized to update this project" });
 
-    if (thumbnails) {
-      for (let i = 0; i < thumbnails?.length; i++) {
-        if (project?.thumbnails?.includes(thumbnails[i])) {
-          // await cloudinary.uploader.destroy(project.thumbnails[i].split("/").pop().split(".")[0])
-        } else {
-          const uploadedResponse = await cloudinary.uploader.upload(
-            thumbnails[i]
-          );
-          thumbnails[i] = uploadedResponse.secure_url;
+
+    if(removedImages?.length > 0){
+      for (let i = 0; i < removedImages?.length; i++) {
+        await cloudinary.uploader.destroy(removedImages[i]);
+
+        const image = removedImages[i];
+
+        for(let i = 0; i < project?.thumbnails?.length; i++){
+
+            const cleanedUrl = project?.thumbnails[i].split("?")[0].split(".").slice(0, -1).join(".");
+            const parts = cleanedUrl.split("/");
+            const updatedImage = parts[parts.length - 1];
+
+
+          if(updatedImage === image){
+            project.thumbnails.splice(i, 1);
+            await project.save();
+          }
         }
+
+       
+        // project.thumbnails.pull(removedImages[i]);
       }
     }
 
-    for (let i = 0; i < project?.thumbnails?.length; i++) {
-      if (!thumbnails?.includes(project?.thumbnails[i])) {
-        await cloudinary.uploader.destroy(
-          project?.thumbnails[i].split("/").pop().split(".")[0]
-        );
-      }
+   
+    if(thumbnails?.length > 0){
+      const uploadPromises = thumbnails.map((thumb, i) =>
+        cloudinary.uploader.upload(thumb).then((uploadedResponse) => {
+          // delete local file after upload
+          fs.unlink(thumb, (err) => {
+            if (err) {
+              console.error("Failed to delete local image:", err);
+            } else {
+              console.log("Local image deleted successfully");
+            }
+          });
+          return uploadedResponse.secure_url;
+        })
+      );
+    
+      // Wait for all uploads to finish in parallel
+      const uploadedUrls = await Promise.all(uploadPromises);
+      thumbnails.splice(0, thumbnails.length, ...uploadedUrls); // Replace old paths with URLs
     }
+
+
 
     if (title) project.title = title;
     if (description) project.description = description;
     if (techStack) project.techStack = techStack;
     if (repoLink) project.repoLink = repoLink;
     if (liveDemoLink) project.liveDemoLink = liveDemoLink;
-    if (thumbnails) project.thumbnails = thumbnails;
+    if (thumbnails) project.thumbnails = [...project?.thumbnails, ...thumbnails];
     if (tags) project.tags = tags;
 
     await project.save();
 
-    res.status(200).json({ message: "Project updated successfully", project });
+    const updatedProject = await Project.findById(projectId).populate("userId","fullName role profilePic _id");
+
+    res.status(200).json({ message: "Project updated successfully", updatedProject });
   } catch (error) {
     console.log("Error in update project controller", error);
     res.status(500).json({ message: "Internal server error" });

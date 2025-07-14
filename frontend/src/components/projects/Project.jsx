@@ -1,28 +1,36 @@
 import { useState, useEffect } from "react";
 import { useRef } from "react";
 import useBreakpoint from "../../hooks/useBreakPoint";
-import { decrementPostCount } from "../../features/auth/authSlice";
+import { decrementProjectCount } from "../../features/auth/authSlice";
+import EditProjectModal from "./EditProjectModal";
 import {
   MessageCircle,
   Send,
   Trash2,
   Pencil,
+  Sparkles,
   MoreVertical,
+  Github,
+  Globe,
+  Tags,
+  Layers,
+  X,
 } from "lucide-react";
 import { ThumbsUp, Heart } from "phosphor-react";
-import { FaLaughSquint } from "react-icons/fa";
 import { GiPartyPopper } from "react-icons/gi";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { fetchComments } from "../../features/comments/commentsSlice";
-import { setAndUnsetReaction } from "../../features/posts/postsSlice";
+import { setAndUnsetReaction } from "../../features/projects/projectsSlice";
 import { addComment } from "../../features/comments/commentsSlice";
 import { deleteComment } from "../../features/comments/commentsSlice";
 import DeleteCommentModal from "../DeleteCommentModal";
 import LoadingSpinner from "../LoadingSpinner";
-import { updatePost } from "../../features/posts/postsSlice";
-import { deletePost } from "../../features/posts/postsSlice";
-import DeletePostModal from "../DeletePostModal";
+import {
+  updateProject,
+  deleteProject,
+} from "../../features/projects/projectsSlice";
+import DeleteProjectModal from "../DeleteProjectModal";
 import { Link } from "react-router-dom";
 
 const reactionTypes = [
@@ -39,10 +47,10 @@ const reactionTypes = [
     textColor: "#ef4444",
   },
   {
-    type: "funny",
-    label: "Funny",
-    icon: <FaLaughSquint size={24} color="#FFCA28" />,
-    textColor: "#FFCA28",
+    type: "innovative",
+    label: "Innovative",
+    icon: <Sparkles size={24} className="text-primary" />,
+    textColor: "#4C68D5",
   },
   {
     type: "celebrate",
@@ -52,23 +60,23 @@ const reactionTypes = [
   },
 ];
 
-const Post = ({ post, currentUser }) => {
+const Project = ({ project, currentUser }) => {
   // const isOwnPost = post.userId === currentUser.id;
 
-  const isOwnPost = post?.userId?._id === currentUser?._id;
+  const isOwnProject = project?.userId?._id === currentUser?._id;
   let currentUserReaction = "";
 
-  for (let key in post?.reactions) {
-    if (post?.reactions[key].includes(currentUser?._id)) {
+  for (let key in project?.reactions) {
+    if (project?.reactions[key].includes(currentUser?._id)) {
       currentUserReaction = key;
     }
   }
 
   const [reactions, setReactions] = useState({
-    like: post?.reactions?.like?.length || 0,
-    love: post?.reactions?.love?.length || 0,
-    funny: post?.reactions?.funny?.length || 0,
-    celebrate: post?.reactions?.celebrate?.length || 0,
+    like: project?.reactions?.like?.length || 0,
+    love: project?.reactions?.love?.length || 0,
+    innovative: project?.reactions?.innovative?.length || 0,
+    celebrate: project?.reactions?.celebrate?.length || 0,
   });
 
   const dispatch = useDispatch();
@@ -76,32 +84,129 @@ const Post = ({ post, currentUser }) => {
   const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0);
 
   const [userReaction, setUserReaction] = useState(null);
-  console.log(userReaction);
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState(null);
-  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [commentsAnimatingOut, setCommentsAnimatingOut] = useState(false);
   const [reactionsAnimatingOut, setReactionsAnimatingOut] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editContent, setEditContent] = useState(post?.text);
-  const [editImage, setEditImage] = useState(post?.image);
-  const [newImageFile, setNewImageFile] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isCommentDeleting, setIsCommentDeleting] = useState(false);
   const [targetCommentId, setTargetCommentId] = useState(null);
-  const [isPostUpdating, setIsPostUpdating] = useState(false);
-  const [isPostDeleting, setIsPostDeleting] = useState(false);
-  const [showDeletePostModal, setShowDeletePostModal] = useState(false);
+  const [isProjectDeleting, setIsProjectDeleting] = useState(false);
+  const [showDeleteProjectModal, setShowDeleteProjectModal] = useState(false);
 
-
-  const postMenuRef = useRef();
+  const projectMenuRef = useRef();
   const isTouchDevice = useRef(false);
   const timeoutRef = useRef();
   const skipNextLeave = useRef(false);
   const reactionBoxRef = useRef(null);
+
+  const scrollRef = useRef(null);
+
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  const [isUpdating,setIsUpdating] = useState(false);
+
+
+const handleUpdateProject = async (editForm, techStack, tags, imageFiles,removedImages) => {
+
+  if (!editForm.title || !editForm.description) {
+    toast.error("Title and description are required");
+    return;
+  }
+
+
+
+  const formData = new FormData();
+  formData.append("title", editForm.title);
+  formData.append("description", editForm.description);
+  formData.append("repoLink", editForm.repoLink || "");
+  formData.append("liveDemoLink", editForm.liveDemoLink || "");
+
+  // Append each new image
+  imageFiles.forEach((file) => {
+    formData.append("images", file); // backend must expect "images"
+  });
+
+  // Append techStack and tags
+  techStack.forEach((tech) => {
+    formData.append("techStack[]", tech);
+  });
+
+
+
+  tags.forEach((tag) => {
+    formData.append("tags[]", tag);
+  });
+
+
+  removedImages?.forEach((image) => {
+
+     const cleanedUrl = image.split("?")[0].split(".").slice(0, -1).join(".");
+      const parts = cleanedUrl.split("/");
+      const updatedImage = parts[parts.length - 1];
+    formData.append("removedImages[]", updatedImage);
+  });
+
+
+
+  try {
+    setIsUpdating(true);
+
+    // Dispatch your updateProject redux action or call your API
+    await dispatch(updateProject({ formData, projectId: project?._id })).unwrap();
+
+    toast.success("Project updated successfully");
+    setShowEditModal(false); // Close modal
+  } catch (error) {
+    console.error("Update failed:", error);
+    toast.error("Failed to update project");
+  } finally {
+    setIsUpdating(false);
+  }
+};
+
+
+// Example function to open modal
+
+
+
+
+  // Drag state
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollStart = useRef(0);
+
+  // Mouse Events
+  const handleMouseDown = (e) => {
+    isDragging.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollStart.current = scrollRef.current.scrollLeft;
+    scrollRef.current.classList.add("cursor-grabbing");
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+    scrollRef.current.classList.remove("cursor-grabbing");
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    scrollRef.current.classList.remove("cursor-grabbing");
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 2; // multiplier for speed
+    scrollRef.current.scrollLeft = scrollStart.current - walk;
+  };
 
   useEffect(() => {
     setUserReaction(currentUserReaction);
@@ -206,21 +311,20 @@ const Post = ({ post, currentUser }) => {
 
   const setReactionToBackend = (type) => {
     try {
-      dispatch(setAndUnsetReaction({ type, postId: post?._id }));
+      dispatch(setAndUnsetReaction({ type, projectId: project?._id }));
     } catch (error) {
       console.error("Error setting reaction:", error);
     }
   };
 
   const handleAddComment = async () => {
-
-    console.log("handling comment starts here")
+    console.log("handling comment starts here");
     let addedComment = null;
     const commentInputValue = commentInput;
     setCommentInput("");
     try {
       addedComment = await dispatch(
-        addComment({ text: commentInputValue, id: post?._id })
+        addComment({ text: commentInputValue, id: project?._id })
       ).unwrap();
       addedComment = addedComment?.comment;
       toast.success("Comment added successfully");
@@ -233,7 +337,7 @@ const Post = ({ post, currentUser }) => {
       setComments((prev) => [
         ...prev,
         {
-          postId: post?._id,
+          projectId: project?._id,
           text: addedComment?.text,
           _id: addedComment?._id,
           userId: {
@@ -269,57 +373,74 @@ const Post = ({ post, currentUser }) => {
     }
   };
 
-  const handleUpdatePost = async (text, newImage) => {
-    if (!text && !newImage) return toast.error("Post content cannot be empty");
+  // const handleUpdateProject = async (text, newImage) => {
+  //   if (!text && !newImage)
+  //     return toast.error("Project content cannot be empty");
 
-    setIsPostUpdating(true);
+  //   setIsProjectUpdating(true);
+
+  //   try {
+  //     // ✅ Build FormData payload
+  //     const formData = new FormData();
+  //     formData.append("text", text);
+  //     if (newImage) {
+  //       formData.append("image", newImage); // File object
+  //     } // in case needed
+
+  //     await dispatch(
+  //       updateProject({ projectId: project._id, formData })
+  //     ).unwrap();
+
+  //     toast.success("Project updated successfully");
+  //   } catch (error) {
+  //     console.error("Error in updating the Project", error);
+  //     toast.error("Failed to update project");
+  //   } finally {
+  //     setIsProjectUpdating(false);
+  //     setShowEditModal(false);
+  //   }
+  // };
+
+  const handleDeleteProject = async () => {
+    setShowDeleteProjectModal(true);
+    setShowProjectMenu(false);
+  };
+
+  const deleteProjectHandler = async () => {
+    setIsProjectDeleting(true);
 
     try {
-      // ✅ Build FormData payload
-      const formData = new FormData();
-      formData.append("text", text);
-      if (newImage) {
-        formData.append("image", newImage); // File object
-      } // in case needed
-
-       await dispatch(updatePost({ postId: post._id, formData })).unwrap();
-      
-    
-
-      toast.success("Post updated successfully");
+      await dispatch(deleteProject({ projectId: project?._id }))
+        .unwrap()
+        .then(() => {
+          dispatch(decrementProjectCount());
+        });
+      toast.success("Project deleted successfully");
     } catch (error) {
-      console.error("Error in updating the post", error);
-      toast.error("Failed to update post");
+      console.error("Error in deleting the project", error);
+      toast.error("Failed to delete project");
     } finally {
-      setIsPostUpdating(false);
-      setShowEditModal(false);
-    }
-
-
-  };
-
-  const handleDeletePost = async () => {
-    console.log("handleDeletePost");
-    setShowDeletePostModal(true);
-    setShowPostMenu(false);
-  };
-
-  const deletePostHandler = async () => {
-    setIsPostDeleting(true);
-    
-    try {
-      await dispatch(deletePost({ postId: post?._id })).unwrap().then(()=>{
-        dispatch(decrementPostCount())
-      });
-      toast.success("Post deleted successfully");
-    } catch (error) {
-      console.error("Error in deleting the post", error);
-      toast.error("Failed to delete post");
-    } finally {
-      setShowDeletePostModal(false);
-      setIsPostDeleting(false);
+      setShowDeleteProjectModal(false);
+      setIsProjectDeleting(false);
     }
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   
@@ -337,12 +458,13 @@ const Post = ({ post, currentUser }) => {
   const reaction = reactionTypes.find((r) => r.type === userReaction);
 
   useEffect(() => {
-    const fetchPostComments = async () => {
+    const fetchProjectComments = async () => {
       try {
-        const response = await dispatch(fetchComments(post?._id)).unwrap();
+        const response = await dispatch(fetchComments(project?._id)).unwrap();
+        console.log(response.projectComments);
 
         setComments(
-          response?.postComments?.map((comment) => ({
+          response?.projectComments?.map((comment) => ({
             ...comment,
             self: comment.userId?._id === currentUser?._id,
           }))
@@ -352,8 +474,8 @@ const Post = ({ post, currentUser }) => {
       }
     };
 
-    fetchPostComments();
-  }, [dispatch, post?._id]);
+    fetchProjectComments();
+  }, [dispatch, project?._id]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -382,8 +504,11 @@ const Post = ({ post, currentUser }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (postMenuRef.current && !postMenuRef.current.contains(event.target)) {
-        setShowPostMenu(false); // Hide the button
+      if (
+        projectMenuRef.current &&
+        !projectMenuRef.current.contains(event.target)
+      ) {
+        setShowProjectMenu(false); // Hide the button
       }
     };
 
@@ -402,54 +527,56 @@ const Post = ({ post, currentUser }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 relative">
         <div className="flex items-center gap-3">
-          <Link to={`/profile/${post?.userId?._id}`}>
-          <img
-            src={post?.userId?.profilePic}
-            alt={post?.userId?.username}
-            className="w-10 h-10 rounded-full object-cover hover:cursor-pointer"
-          />
+          <Link to={`/profile/${project?.userId?._id}`}>
+            <img
+              src={project?.userId?.profilePic}
+              alt={project?.userId?.username}
+              className="w-10 h-10 rounded-full object-cover hover:cursor-pointer"
+            />
           </Link>
           <div>
-            <Link to={`/profile/${post?.userId?._id}`}>
-            <h4 className="font-semibold text-gray-800 hover:cursor-pointer">
-              {post?.userId?.fullName}
-            </h4>
+            <Link to={`/profile/${project?.userId?._id}`}>
+              <h4 className="font-semibold text-gray-800 hover:cursor-pointer">
+                {project?.userId?.fullName}
+              </h4>
             </Link>
             <p className="text-sm text-gray-500">
-              {post?.userId?.role || "User"}
+              {project?.userId?.role || "User"}
             </p>
           </div>
         </div>
 
         {/* More menu for own post */}
-        {isOwnPost && (
-          <div className="relative" ref={postMenuRef}>
+        {isOwnProject && (
+          <div className="relative" ref={projectMenuRef}>
             <button
-              onClick={() => setShowPostMenu((prev) => !prev)}
+              onClick={() => setShowProjectMenu((prev) => !prev)}
               className="p-1 rounded-full hover:bg-gray-100 transition"
             >
               <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
 
-            {showPostMenu && (
+            {showProjectMenu && (
               <div
-                className={`absolute right-0 bottom-10 w-36 bg-white border border-gray-200 shadow-lg rounded-lg z-50 animate-fade-in`}
+                className={`absolute right-0 bottom-10 w-40 bg-white border border-gray-200 shadow-lg rounded-lg z-50 animate-fade-in`}
               >
                 <button
-                  onClick={()=> handleDeletePost()}
+                  onClick={() => handleDeleteProject()}
                   className="w-full text-left px-4 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50  rounded-t-lg transition"
                 >
-                  <Trash2 className="w-4 h-4 mr-2 inline-block" /> Delete Post
+                  <Trash2 className="w-4 h-4 mr-2 inline-block" /> Delete
+                  Project
                 </button>
 
                 <button
                   onClick={() => {
                     setShowEditModal(true);
-                    setShowPostMenu(false);
+                     setSelectedProject(project);
+                    setShowProjectMenu(false);
                   }}
                   className="w-full text-left px-4 py-2 text-sm hover:text-primary text-gray-600 hover:bg-blue-50 rounded-t-lg transition"
                 >
-                  <Pencil className="w-4 h-4 mr-2 inline-block" /> Edit Post
+                  <Pencil className="w-4 h-4 mr-2 inline-block" /> Edit Project
                 </button>
               </div>
             )}
@@ -458,14 +585,151 @@ const Post = ({ post, currentUser }) => {
       </div>
 
       {/* Content */}
-      <p className="text-gray-800 text-sm mb-3">{post?.text}</p>
-      {post?.image && (
-        <img
-          src={post?.image}
-          alt="Post"
-          className="rounded-lg w-full object-cover max-h-[400px] mb-4"
-        />
-      )}
+
+      <div className="space-y-6 relative top-2 w-full max-w-6xl mx-auto px-3">
+        {/* Title */}
+        {project?.title && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="w-3 h-3 bg-primary rounded-full" />
+            <div className="h-0.5 w-10 bg-indigo-300 relative right-2" />
+            <h2 className="text-md font-medium text-gray-600">Title:</h2>
+            <h2 className="text-lg font-bold text-primary break-words">
+              {project.title}
+            </h2>
+          </div>
+        )}
+
+        {/* Description */}
+        {project?.description && (
+          <div className="flex flex-col gap-2 pb-4">
+            <div className="flex items-center">
+              <span className="w-3 h-3 bg-primary rounded-full" />
+              <div className="h-0.5 w-10 bg-indigo-300" />
+              <h2 className="text-md font-medium text-gray-600 ml-4">
+                Description:
+              </h2>
+            </div>
+            <div className="sm:pl-[calc(0.75rem+2.5rem)]">
+              {" "}
+              {/* aligns under bullet */}
+              <p className="text-sm text-gray-600 max-w-4xl leading-relaxed xl:relative xl:left-4 text-justify lg:relative lg:left-4 md:relative md:left-4 ">
+                {project.description}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* GitHub Repo */}
+        {project?.repoLink && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="w-3 h-3 bg-primary rounded-full " />
+            <div className="h-0.5 w-10 bg-indigo-300 relative right-2" />
+            <Github className="w-5 h-5 text-gray-600" />
+            <h2 className="text-md font-medium text-gray-600">GitHub Repo:</h2>
+            <a
+              href={project.repoLink}
+              className="text-sm text-primary underline break-all"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {project.repoLink}
+            </a>
+          </div>
+        )}
+
+        {/* Live Demo */}
+        {project?.liveDemoLink && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="w-3 h-3 bg-primary rounded-full" />
+            <div className="h-0.5 w-10 bg-indigo-300 relative right-2" />
+            <Globe className="w-5 h-5 text-primary" />
+            <h2 className="text-md font-medium text-gray-600">Live Demo:</h2>
+            <a
+              href={project.liveDemoLink}
+              className="text-sm text-primary underline break-all"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {project.liveDemoLink}
+            </a>
+          </div>
+        )}
+
+        {/* Tags */}
+        {project?.tags?.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 bg-primary rounded-full" />
+              <div className="h-0.5 w-10 bg-indigo-300 relative right-2" />
+              <Tags className="w-5 h-5 text-green-600" />
+              <h2 className="text-md font-medium text-gray-600">Tags:</h2>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {project.tags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tech Stack */}
+        {project?.techStack?.length > 0 && (
+          <div className="flex flex-col sm:flex-row  sm:items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 bg-primary rounded-full" />
+              <div className="h-0.5 w-10 bg-indigo-300 relative right-2" />
+              <Layers className="w-5 h-5 text-primary" />
+              <h2 className="text-md font-medium text-gray-600">Tech Stack:</h2>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {project.techStack.map((tech, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 text-xs bg-primary text-white rounded-full"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Thumbnails */}
+        {project?.thumbnails?.length > 0 && (
+          <div className="space-y-3 relative pb-8">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 bg-primary rounded-full" />
+              <div className="h-0.5 w-10 bg-indigo-300 relative right-2" />
+              <h2 className="text-md font-medium text-gray-600">Thumbnails:</h2>
+            </div>
+            <div
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              className="overflow-x-auto scrollbar-hide"
+            >
+              <div className="flex gap-4 snap-x snap-mandatory">
+                {project.thumbnails.map((img, idx) => (
+                  <img
+                    draggable={false}
+                    key={idx}
+                    src={img}
+                    alt={`Screenshot ${idx + 1}`}
+                    className="w-[260px] h-[160px] object-cover rounded-xl snap-start shrink-0"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Reaction summary */}
       <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
@@ -574,22 +838,22 @@ const Post = ({ post, currentUser }) => {
               >
                 <div className="flex gap-3">
                   <Link to={`/profile/${comment?.userId?._id}`}>
-                  <img
-                    src={comment?.userId?.profilePic}
-                    alt={comment?.userId?.fullName}
-                    className="w-8 h-8 rounded-full object-cover hover:cursor-pointer"
-                  />
+                    <img
+                      src={comment?.userId?.profilePic}
+                      alt={comment?.userId?.fullName}
+                      className="w-8 h-8 rounded-full object-cover hover:cursor-pointer"
+                    />
                   </Link>
                   <div>
-                   <Link to={`/profile/${comment?.userId?._id}`}>
-                    <p className="text-sm font-semibold text-gray-800 hover:cursor-pointer">
-                      {comment?.userId?.fullName}
-                    </p>
-                   </Link>
+                    <Link to={`/profile/${comment?.userId?._id}`}>
+                      <p className="text-sm font-semibold text-gray-800 hover:cursor-pointer">
+                        {comment?.userId?.fullName}
+                      </p>
+                    </Link>
                     <p className="text-sm text-gray-700">{comment?.text}</p>
                   </div>
                 </div>
-                {(comment.self || post?.userId?._id === currentUser?._id) ?  (
+                {comment.self || project?.userId?._id === currentUser?._id ? (
                   <button
                     onClick={() => {
                       setTargetCommentId(comment?._id);
@@ -614,8 +878,6 @@ const Post = ({ post, currentUser }) => {
                 isCommentDeleting={isCommentDeleting}
               />
             )}
-
-            
           </div>
 
           {/* Comment Input */}
@@ -643,85 +905,29 @@ const Post = ({ post, currentUser }) => {
         </div>
       )}
 
-      {showDeletePostModal && (
-              <DeletePostModal
-                isOpen={showDeletePostModal}
-                onClose={() => {
-                  setShowDeletePostModal(false);
-                }}
-                onDelete={() => deletePostHandler(post?.id)}
-                isPostDeleting={isPostDeleting}
-              />
-            )}
-
-
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex justify-center items-center px-4 animate-fade-in sm:mb-2">
-          <div className="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4 relative">
-            <h3 className="text-lg font-semibold text-gray-800">Edit Post</h3>
-
-            {/* Text Area */}
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full h-32 border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg p-3 text-sm resize-none outline-none"
-              placeholder="Update your post text..."
-            />
-
-            {/* Image Preview & Upload */}
-            <div className="space-y-2">
-              {(editImage || newImageFile) && (
-                <img
-                  src={
-                    newImageFile ? URL.createObjectURL(newImageFile) : editImage
-                  }
-                  alt="Preview"
-                  className="w-full rounded-md object-cover max-h-64"
-                />
-              )}
-              <label className="block">
-                <span className="text-sm text-gray-700">Change image:</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      setNewImageFile(file);
-                    }
-                  }}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:border file:rounded-md file:text-sm file:bg-blue-50 file:text-primary hover:file:bg-blue-100"
-                />
-              </label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleUpdatePost(editContent, newImageFile)}
-                className="px-4 py-2 text-sm rounded-md bg-primary text-white hover:bg-primary-700"
-              >
-                {isPostUpdating ? (
-                  <span className="flex items-center gap-2">
-                    <LoadingSpinner className="w-4 h-4" />
-                    <span>Updating...</span>
-                  </span>
-                ) : (
-                  "Save Changes"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+      {showDeleteProjectModal && (
+        <DeleteProjectModal
+          isOpen={showDeleteProjectModal}
+          onClose={() => {
+            setShowDeleteProjectModal(false);
+          }}
+          onDelete={() => deleteProjectHandler(project?.id)}
+          isProjectDeleting={isProjectDeleting}
+        />
       )}
+
+      {/* // edit modal */}
+
+       <EditProjectModal
+      showEditModal={showEditModal}
+      setShowEditModal={setShowEditModal}
+      initialProjectData={selectedProject}
+      handleUpdateProject={handleUpdateProject}
+      isUpdating={isUpdating}
+  />
+
     </div>
   );
 };
 
-export default Post;
+export default Project;

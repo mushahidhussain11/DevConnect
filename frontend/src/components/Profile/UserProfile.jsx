@@ -7,6 +7,7 @@ import { useDispatch,useSelector } from 'react-redux'
 import UserInfoLoadingSkeleton from '../UserInfoLoadingSkeleton'
 import UserPosts from './UserPosts'
 import UserSettings from './UserSettings'
+import UserProjects from './UserProjects'
 
 const UserProfile = () => {
 
@@ -56,8 +57,12 @@ const UserProfile = () => {
       {postsChecked && <UserPosts id={id} />}
     </div>
     <div>
+      {projectsChecked && <UserProjects id={id} />}
+    </div>
+    <div>
       {settingsChecked && <UserSettings id={id} />}
     </div>
+     
    </>
   )
 }

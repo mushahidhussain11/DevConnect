@@ -125,6 +125,17 @@ const authSlice = createSlice({
       }
     },
 
+    incrementProjectCount(state) {
+      if (state?.user?.user) {
+        state.user.user.numberOfProjects += 1;
+      }
+    },
+      decrementProjectCount(state) {
+      if (state?.user?.user) {
+        state.user.user.numberOfProjects -= 1;
+      }
+    },
+
     updateCurrentUserInfo(state, action) {
       if (state?.user?.user) {
         // Destructure profilePic if it exists in formDataObj
@@ -260,6 +271,7 @@ export default authSlice.reducer;
 export const {
   decrementPostCount,
   incrementPostCount,
- 
+  incrementProjectCount,
+  decrementProjectCount,
   updateCurrentUserInfo,
 } = authSlice.actions;

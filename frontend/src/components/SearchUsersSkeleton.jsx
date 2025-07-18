@@ -2,7 +2,7 @@ import React from "react";
 
 export default function SearchUsersSkeleton() {
   return (
-    <div className="space-y-4 bg-white p-4 sm:p-5 md:p-6 rounded-xl shadow-md">
+    <div className="w-3xl space-y-4 bg-white relative ml-4 sm:p-5 md:p-6 rounded-xl shadow-md">
       {Array(6).fill(0).map((_, index) => (
         <div
           key={index}
@@ -13,7 +13,6 @@ export default function SearchUsersSkeleton() {
           <div className="flex items-center gap-3 sm:gap-4 w-full">
             {/* Avatar */}
             <div className="w-14 h-14 bg-gray-300 rounded-full" />
-
             {/* Name & Role */}
             <div className="flex flex-col justify-center space-y-2 w-full">
               <div className="h-4 bg-gray-300 rounded w-3/5 sm:w-2/5" />

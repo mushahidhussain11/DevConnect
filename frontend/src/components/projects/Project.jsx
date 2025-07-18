@@ -627,7 +627,7 @@ const handleUpdateProject = async (editForm, techStack, tags, imageFiles,removed
             <Github className="w-5 h-5 text-gray-600" />
             <h2 className="text-md font-medium text-gray-600">GitHub Repo:</h2>
             <a
-              href={project.repoLink}
+              href={`https://${project.repoLink}`}
               className="text-sm text-primary underline break-all"
               target="_blank"
               rel="noreferrer"

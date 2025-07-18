@@ -12,7 +12,7 @@ const ProjectSection = () => {
     max-w-full
     md:max-w-2xl
     lg:max-w-3xl
-    xl:max-w-2xl
+    xl:max-w-4xl
   "
     >
       {/* Upload Project Section */}

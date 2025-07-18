@@ -268,7 +268,7 @@ export async function reactToProject(req, res) {
       project?.reactions[typeOfReaction].push(userId);
 
       if (!project?.userId.equals(userId)) {
-        await sendNotification(userId, project.userId, typeOfReaction);
+        await sendNotification(userId, project.userId, typeOfReaction,null, projectId);
       }
     }
 

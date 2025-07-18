@@ -86,7 +86,7 @@ export async function followUser(req, res) {
 
     // Trrigger Notification
 
-    await sendNotification(userId, userToFollowId, "follow");
+    await sendNotification(userId, userToFollowId, "follow",null,null);
 
     res.status(200).json({ message: "User followed successfully",userToFollow });
   } catch (error) {

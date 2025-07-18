@@ -214,7 +214,7 @@ export async function reactToPost(req, res) {
       post.reactions[typeOfReaction].push(userId)
       
       if(!(post?.userId.equals(userId))){
-        await sendNotification(userId,post.userId,typeOfReaction) 
+        await sendNotification(userId,post.userId,typeOfReaction,postId,null) 
       }
     }
 

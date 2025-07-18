@@ -17,6 +17,14 @@ const notificationSchema = new mongoose.Schema(
       enum: ["like","love","funny","celebrate","innovative", "follow", "comment", "message"],
       required: true,
     },
+    postId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+    },
     
   },
   { timestamps: true } 

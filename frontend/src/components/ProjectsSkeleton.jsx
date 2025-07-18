@@ -3,7 +3,7 @@ import "../shimmer.css" // 👈 for shimmer animation
 
 const ProjectsSkeleton = () => {
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow overflow-hidden p-4 space-y-4">
+    <div className="w-full max-w-3xl mx-auto bg-white rounded-xl shadow overflow-hidden p-4 space-y-4">
       {/* Header: Avatar + Info */}
       <div className="flex items-center space-x-4">
         <div className="skeleton-circle w-12 h-12" />

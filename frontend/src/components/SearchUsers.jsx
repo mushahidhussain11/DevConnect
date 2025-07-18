@@ -99,7 +99,7 @@ export default function SearchPage() {
   return loading ? (
     <SearchUsersSkeleton />
   ) : (
-    <div className="w-full flex justify-center px-3 sm:px-4 md:px-6 py-6 relative bottom-6">
+    <div className="w-full flex justify-center  px-3 sm:px-4 md:px-6 py-6 relative bottom-6">
       <div
         className="w-full max-w-4xl bg-white border border-gray-200 rounded-xl shadow-md 
         p-4 sm:p-5 md:p-6 lg:p-6 

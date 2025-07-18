@@ -1,5 +1,5 @@
 import Notification from "../models/notification.model.js";
-export async function sendNotification(senderId,receiverId,type) {
+export async function sendNotification(senderId,receiverId,type,postId,projectId) {
 
 
     try {
@@ -8,7 +8,7 @@ export async function sendNotification(senderId,receiverId,type) {
             throw new Error('Missing notification parameters');
         }
 
-        const notification = await Notification.create({senderId,receiverId,type});
+        const notification = await Notification.create({senderId,receiverId,type,postId,projectId});
 
         return notification
 

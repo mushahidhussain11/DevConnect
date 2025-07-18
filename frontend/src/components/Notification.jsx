@@ -76,8 +76,8 @@ const NotificationCard = ({ notification }) => {
             <>
               <span className="pt-0.5">{getReactionIcon(notification?.type)}</span>
               <p>
-                <strong className="text-gray-900">{notification?.senderId?.fullName}</strong> reacted to your post
-                with{" "}
+                <strong className="text-gray-900">{notification?.senderId?.fullName}</strong> reacted to your {notification?.postId !== null ? "post " : "project "}
+                with {" "}
                 <strong className="capitalize">{notification?.type}</strong>.
               </p>
             </>
@@ -87,7 +87,7 @@ const NotificationCard = ({ notification }) => {
             <>
               <MessageCircle className="text-indigo-500 w-5 h-5 mt-0.5" />
               <p>
-                <strong className="text-gray-900">{notification?.senderId?.fullName}</strong> commented on your post.
+                <strong className="text-gray-900">{notification?.senderId?.fullName}</strong> commented on your {notification?.postId !== null ? "post" : "project"}.
               </p>
             </>
           )}
@@ -155,7 +155,7 @@ const Notification = () => {
           ) : notifications?.length === 0 ? (
             <div className="text-center text-gray-500 py-10 flex justify-center items-center gap-2">
               <BellOff className="w-5 h-5 text-primary" />
-              <p className="text-md">No notifications found.</p>
+              <p className="text-md">No notifications for you.</p>
             </div>
           ) : (
             notifications?.map((notification) => (

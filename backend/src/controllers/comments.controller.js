@@ -26,7 +26,7 @@ export async function addComment(req, res) {
       await post.save();
 
       if (!post?.userId.equals(userId)) {
-        sendNotification(userId, post?.userId, "comment");
+        sendNotification(userId, post?.userId, "comment", post?._id,null);
       }
 
       res.status(200).json({ message: "Comment added successfully", comment });
@@ -40,7 +40,7 @@ export async function addComment(req, res) {
       await project.save();
 
       if (!project?.userId.equals(userId)) {
-        sendNotification(userId, project?.userId, "comment");
+        sendNotification(userId, project?.userId, "comment",null,project?._id);
       }
 
       res.status(200).json({ message: "Comment added successfully", comment });

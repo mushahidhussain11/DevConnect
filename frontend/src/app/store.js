@@ -4,6 +4,7 @@ import postsReducer from '../features/posts/postsSlice';
 import commentsReducer from '../features/comments/commentsSlice';
 import userReducer from '../features/user/userSlice';
 import projectsReducer from '../features/projects/projectsSlice';
+import messagesReducer from '../features/messages/messagesSlice';
 
 const store = configureStore({
   reducer: {
@@ -11,7 +12,8 @@ const store = configureStore({
     posts: postsReducer,
     comments: commentsReducer,
     user: userReducer,
-    projects: projectsReducer
+    projects: projectsReducer,
+    messages: messagesReducer
 
   },
 });

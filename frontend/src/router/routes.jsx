@@ -14,6 +14,7 @@ import SuggestionsPage from "../pages/SuggestionsPage";
 import SearchPage from "../pages/SearchPage";
 import NotificationsPage from "../pages/NotificationsPage";
 import ProjectsPage from "../pages/ProjectsPage";
+import Messages from "../pages/Messages";
 
 const routes = [
 
@@ -26,6 +27,7 @@ const routes = [
   { path: "/suggestions", element: <ProtectedRoute> <SuggestionsPage /> </ProtectedRoute> },
   { path: "/search", element: <ProtectedRoute> <SearchPage/> </ProtectedRoute> },
   { path: "/notifications", element: <ProtectedRoute> <NotificationsPage/> </ProtectedRoute> },
+  { path: "/messages", element: <ProtectedRoute> <Messages/> </ProtectedRoute> },
    { path: "/projects", element: <ProtectedRoute> <ProjectsPage/> </ProtectedRoute> },
   // { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
   // { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },

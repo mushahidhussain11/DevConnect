@@ -131,6 +131,21 @@ export const deleteNotification = createAsyncThunk(
   }
 );
 
+export const getAllOtherUsers = createAsyncThunk(
+  "user/getAllOtherUsers",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await userService.getAllOtherUsers(credentials);
+      console.log(response);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
 
 
 

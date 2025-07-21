@@ -1,21 +1,34 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import postsService from "./messagesService";
+import messagesService from "./messagesService";
 
 const initialState = {
   messages: null,
-  userPosts:null,
-  areUserPostsLoading: false,
-  isLoading: true,
   isSuccess: false,
   isError: false,
   message: "",
 };
 
-export const fetchAllPosts = createAsyncThunk(
-  "posts/fetchAllPosts",
-  async (_, thunkAPI) => {
+export const fetchUserConversations = createAsyncThunk(
+  "messages/fetchUserConversations",
+  async (credentials, thunkAPI) => {
     try {
-      const response = await postsService.fetchAllPosts();
+      const response = await messagesService.fetchUserConversations(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+
+export const createConversationWithUser = createAsyncThunk(
+  "messages/createConversationWithUser",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await messagesService.createConversationWithUser(credentials);
       console.log(response)
       return response;
     } catch (error) {
@@ -29,7 +42,6 @@ export const fetchAllPosts = createAsyncThunk(
 
 
 
-
 const messagesSlice = createSlice({
   name: "messages",
   initialState: initialState,
@@ -37,19 +49,19 @@ const messagesSlice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      .addCase(fetchAllPosts.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(fetchAllPosts.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.posts = action.payload?.posts;
-      })
-      .addCase(fetchAllPosts.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.message = action.payload;
-      })
+      // .addCase(fetchAllPosts.pending, (state) => {
+      //   state.isLoading = true;
+      // })
+      // .addCase(fetchAllPosts.fulfilled, (state, action) => {
+      //   state.isLoading = false;
+      //   state.isSuccess = true;
+      //   state.posts = action.payload?.posts;
+      // })
+      // .addCase(fetchAllPosts.rejected, (state, action) => {
+      //   state.isLoading = false;
+      //   state.isError = true;
+      //   state.message = action.payload;
+      // })
 
      
   },

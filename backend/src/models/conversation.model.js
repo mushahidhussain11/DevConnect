@@ -2,15 +2,30 @@ import mongoose from "mongoose";
 
 const conversationSchema = new mongoose.Schema(
   {
-    members: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: "User",
-      required: true,
+    
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
+
+    isAI: {
+      type: Boolean,
+      default: false,
     },
-    deletedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+
+    // createdBy: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "User",
+    // },
+    deletedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

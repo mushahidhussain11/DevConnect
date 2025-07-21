@@ -8,6 +8,15 @@ class UserService {
     return res.data;
   }
 
+
+   async getAllOtherUsers(credentials) {
+    const res = await axios.get(`/api/users/allUsers/${credentials}`, {
+      withCredentials: true,
+    }); 
+    return res.data;
+  }
+  
+
   async updateUserInfo(credentials) {
     const id = credentials?.formData?.get("id")
   

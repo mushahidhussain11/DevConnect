@@ -6,7 +6,7 @@ import EmojiPicker from "emoji-picker-react";
 import { FiSend } from "react-icons/fi";
 import { Smile } from "lucide-react"; // 👈 import icon
 
-const ChatWindow = ({ conversation }) => {
+const ChatWindow = ({ conversation,handleBack }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -144,10 +144,11 @@ const ChatWindow = ({ conversation }) => {
     setIsTyping(true);
   };
 
+  
   return (
     <div className="flex flex-col h-full">
       {/* Header with name, status, video/audio call icons */}
-      <ChatHeader conversation={conversation} />
+      <ChatHeader conversation={conversation} handleBack={handleBack} />
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
@@ -169,7 +170,7 @@ const ChatWindow = ({ conversation }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="text-xl text-gray-500 hover:text-[#4C68D5]"
+            className="text-xl text-gray-500 hover:text-[#4C68D5] xs:relative xs:right-5"
           >
             <Smile size={24} />
           </button>
@@ -180,12 +181,12 @@ const ChatWindow = ({ conversation }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="flex-1 px-5 py-3 rounded-xl bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#4C68D5] focus:bg-white shadow-sm transition duration-200  border border-gray-300"
+            className="flex-1 px-5 py-3 rounded-xl bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#4C68D5] focus:bg-white shadow-sm transition duration-200  border border-gray-300 xs:relative xs:right-5"
           />
 
           <button
             onClick={handleSend}
-            className="bg-[#4C68D5] hover:bg-[#3c56b0] text-white p-2 rounded-full"
+            className="bg-[#4C68D5] hover:bg-[#3c56b0] text-white p-2 rounded-full xs:relative xs:right-3"
           >
             <FiSend size={18} />
           </button>

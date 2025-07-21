@@ -196,3 +196,14 @@ export async function updateUser(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
+export const getAllOtherUsers = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const users = await User.find({ _id: { $ne: id } }).select('-password'); // Exclude password field
+    res.status(200).json({ message: 'Users fetched successfully', users });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+};

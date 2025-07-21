@@ -3,6 +3,9 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+       screens: {
+        xs: { max: "639px" }, // custom xs for <640px
+      },
       keyframes: {
         "fade-in-up": {
           "0%": { opacity: 0, transform: "translateY(10px)" },
@@ -21,6 +24,7 @@ export default {
         "fade-in-up": "fade-in-up 0.5s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "fade-out-down": "fade-out-down 0.5s ease-out",
+         'fade-in-fast': 'fadeIn 0.15s ease-out',
       },
       fontFamily: {
         inter: ["Inter"],

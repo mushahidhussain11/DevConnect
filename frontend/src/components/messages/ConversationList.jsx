@@ -29,6 +29,7 @@ const ConversationList = ({ onSelect }) => {
     id: "ai",
     name: "DevConnect AI",
     isAI: true,
+    
   };
 
   // Fetch all other users

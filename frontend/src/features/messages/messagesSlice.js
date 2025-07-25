@@ -40,6 +40,22 @@ export const createConversationWithUser = createAsyncThunk(
 );
 
 
+export const fetchConversationMessages = createAsyncThunk(
+  "messages/fetchConversationMessages",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await messagesService.fetchConversationMessages(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+
 
 
 const messagesSlice = createSlice({

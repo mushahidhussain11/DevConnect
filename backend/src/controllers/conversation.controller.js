@@ -10,7 +10,7 @@ export async function getUserConversations(req,res) {
       return res.status(400).json({ message: "Invalid  id" });
 
     const conversations = await Conversation.find({ members: userId }).populate("members", "fullName onlineStatus lastSeen profilePic _id").sort({
-      createdAt: -1,
+      updatedAt: -1,
     });
 
     res

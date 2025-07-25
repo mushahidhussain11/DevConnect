@@ -4,83 +4,26 @@ import TypingIndicator from "./TypingIndicator";
 import ChatHeader from "./ChatHeader";
 import EmojiPicker from "emoji-picker-react";
 import { FiSend } from "react-icons/fi";
-import { Smile } from "lucide-react"; // 👈 import icon
+import { Smile, MessageCircleOff } from "lucide-react"; // 👈 import icon
+import { useDispatch, useSelector } from "react-redux";
+import { fetchConversationMessages } from "../../features/messages/messagesSlice";
+import MessageSkeleton from "../MessageSkeleton";
+import { getSocket } from "../../lib/socket";
 
-const ChatWindow = ({ conversation,handleBack }) => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "me",
-      text: "Hey there! How’s it going?",
-      timestamp: "2025-07-19T10:00:00Z",
-    },
-    {
-      id: 2,
-      sender: conversation?.id || "user123",
-      text: "Hi! I'm good, how about you?",
-      timestamp: "2025-07-19T10:01:00Z",
-    },
-    {
-      id: 3,
-      sender: "me",
-      text: "All good! Working on the DevConnect project 🚀",
-      timestamp: "2025-07-19T10:02:00Z",
-    },
-    {
-      id: 4,
-      sender: conversation?.id || "user123",
-      text: "That’s awesome! Need any help?",
-      timestamp: "2025-07-19T10:03:00Z",
-    },
-    {
-      id: 1,
-      sender: "me",
-      text: "Hey there! How’s it going?",
-      timestamp: "2025-07-19T10:00:00Z",
-    },
-    {
-      id: 2,
-      sender: conversation?.id || "user123",
-      text: "Hi! I'm good, how about you?",
-      timestamp: "2025-07-19T10:01:00Z",
-    },
-    {
-      id: 3,
-      sender: "me",
-      text: "All good! Working on the DevConnect project 🚀",
-      timestamp: "2025-07-19T10:02:00Z",
-    },
-    {
-      id: 4,
-      sender: conversation?.id || "user123",
-      text: "That’s awesome! Need any help?",
-      timestamp: "2025-07-19T10:03:00Z",
-    },
-    {
-      id: 1,
-      sender: "me",
-      text: "Hey there! How’s it going?",
-      timestamp: "2025-07-19T10:00:00Z",
-    },
-    {
-      id: 2,
-      sender: conversation?.id || "user123",
-      text: "Hi! I'm good, how about you?",
-      timestamp: "2025-07-19T10:01:00Z",
-    },
-    {
-      id: 3,
-      sender: "me",
-      text: "All good! Working on the DevConnect project 🚀",
-      timestamp: "2025-07-19T10:02:00Z",
-    },
-    {
-      id: 4,
-      sender: conversation?.id || "user123",
-      text: "That’s awesome! Need any help?",
-      timestamp: "2025-07-19T10:03:00Z",
-    },
-  ]);
+const ChatWindow = ({ conversation, handleBack }) => {
+  const dispatch = useDispatch();
+
+  const { user } = useSelector((state) => state.auth);
+
+  const otherUser = conversation?.members?.find(
+    (member) => member._id !== user?.user?._id
+  );
+
+  const [messages, setMessages] = useState([]);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const socket = getSocket();
 
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -105,24 +48,53 @@ const ChatWindow = ({ conversation,handleBack }) => {
     };
   }, [showEmojiPicker]);
 
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        setIsLoading(true);
+        const response = await dispatch(
+          fetchConversationMessages(conversation?._id)
+        );
+
+        const data = response?.payload?.messages ?? [];
+        setMessages(data);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [dispatch, conversation]);
+
   // Simulate incoming message
   useEffect(() => {
-    if (isTyping) {
-      const timeout = setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now(),
-            sender: conversation.id,
-            text: "This is a reply message.",
-            timestamp: new Date().toISOString(),
-          },
-        ]);
+    if (!conversation?._id) return;
+
+    socket.on("receive-message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    // Typing indicator
+    socket.on("user-typing", ({ conversationId }) => {
+      if (conversationId === conversation?._id) {
+        setIsTyping(true);
+      }
+    });
+    socket.on("user-stop-typing", ({ conversationId }) => {
+      if (conversationId === conversation?._id) {
         setIsTyping(false);
-      }, 2000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isTyping]);
+      }
+    });
+
+    return () => {
+      // socket.disconnect();
+      socket.off("receive-message");
+      socket.off("user-typing");
+      socket.off("user-stop-typing");
+    };
+  }, [conversation?._id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -134,35 +106,104 @@ const ChatWindow = ({ conversation,handleBack }) => {
 
     const newMessage = {
       id: Date.now(),
-      sender: "me",
+      senderId: user?.user?._id,
       text: input,
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
 
+    // Emit to server
+    socket.emit("send-message", {
+      senderId: user?.user?._id,
+      receiverId: otherUser?._id,
+      text: input,
+    });
+
+    // Optimistically add message locally
     setMessages((prev) => [...prev, newMessage]);
     setInput("");
-    setIsTyping(true);
+
+    // socket.emit("stop-typing", {
+    //   conversationId: conversation._id,
+    //   user: user?.user?._id,
+    // });
   };
 
-  
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
+
+  const handleTyping = (e) => {
+    setInput(e.target.value);
+
+    if (!isTypingRef.current) {
+      socket.emit("typing", {
+        to: otherUser?._id,
+        conversationId: conversation?._id,
+      });
+      isTypingRef.current = true;
+    }
+
+    clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stop-typing", {
+        to: otherUser?._id,
+        conversationId: conversation?._id,
+      });
+      isTypingRef.current = false;
+    }, 1500);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header with name, status, video/audio call icons */}
       <ChatHeader conversation={conversation} handleBack={handleBack} />
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
-        {messages.map((msg, idx) => (
-          <ChatItem
-            key={idx}
-            message={msg}
-            isOwnMessage={msg.sender === "me"}
-          />
-        ))}
-
-        {isTyping && <TypingIndicator sender={conversation.name} />}
-
-        <div ref={chatEndRef} />
+      <div
+        className="flex-1 overflow-y-auto scrollbar-hide px-4 py-4 "
+        style={{ display: "flex", flexDirection: "column" }}
+        ref={chatEndRef}
+      >
+        {isLoading ? (
+          <div>
+            <MessageSkeleton isOwnMessage={true} />
+            <MessageSkeleton isOwnMessage={false} />
+            <MessageSkeleton isOwnMessage={true} />
+            <MessageSkeleton isOwnMessage={false} />
+            <MessageSkeleton isOwnMessage={true} />
+            <MessageSkeleton isOwnMessage={false} />
+            <MessageSkeleton isOwnMessage={true} />
+            <MessageSkeleton isOwnMessage={false} />
+          </div>
+        ) : (
+          <div style={{ marginTop: "auto" }}>
+            {messages?.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center my-10 animate-fade-in mx-auto">
+                <div className="bg-[#e9edff] p-4 rounded-full shadow-md mb-4">
+                  <MessageCircleOff className="h-10 w-10 text-[#4C68D5]" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-700">
+                  No Messages Yet
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Start the conversation to see messages here.
+                </p>
+              </div>
+            ) : (
+              <>
+                {messages?.map((msg, idx) => (
+                  <ChatItem
+                    key={idx}
+                    message={msg}
+                    isOwnMessage={msg.senderId === user?.user?._id}
+                  />
+                ))}
+                {isTyping && <TypingIndicator otherUser={otherUser} />}
+                <div ref={chatEndRef} />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Input section */}
@@ -179,7 +220,7 @@ const ChatWindow = ({ conversation,handleBack }) => {
             type="text"
             placeholder="Type your message..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleTyping}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             className="flex-1 px-5 py-3 rounded-xl bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#4C68D5] focus:bg-white shadow-sm transition duration-200  border border-gray-300 xs:relative xs:right-5"
           />
@@ -203,7 +244,6 @@ const ChatWindow = ({ conversation,handleBack }) => {
               height={350}
               width={300}
             />
-
           </div>
         )}
       </div>

@@ -2,14 +2,18 @@ import React from "react";
 import { formatDistanceToNow } from "date-fns";
 
 const ChatItem = ({ message, isOwnMessage }) => {
-  const formattedTime = formatDistanceToNow(new Date(message.timestamp), {
-    addSuffix: true,
-  });
+
+  const secondsAgo = (Date.now() - new Date(message.createdAt)) / 1000;
+
+const timeLabel =
+  secondsAgo < 5 ? "Just now" : formatDistanceToNow(new Date(message.createdAt), { addSuffix: true });
+
+const formattedTime = timeLabel;
 
   
 
   return (
-    <div className={`flex ${isOwnMessage ? "justify-end" : "justify-start"} mb-8 `}>
+    <div className={`flex ${isOwnMessage ? "justify-end" : "justify-start"} mb-2 `}>
       <div
         className={`max-w-xs sm:max-w-md px-4  py-2 rounded-2xl text-sm shadow-sm break-words
           ${isOwnMessage

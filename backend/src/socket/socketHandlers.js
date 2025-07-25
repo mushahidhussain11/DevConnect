@@ -13,23 +13,29 @@ export async function socketHandlers(socket, io) {
     console.log(`🟢 User connected: ${userId} -> ${socket.id}`);
   }
 
+  console.log(onlineUsers)
+
 
   // 📥 User created (after signup/login/oauth)
   socket.on("user-created", (userData) => {
     console.log("🆕 User created:", userData);
   });
 
-    socket.on("typing", ({ to }) => {
+    socket.on("typing", ({ to, conversationId }) => {
     const receiverSocketId = onlineUsers.get(to);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("user-typing");
+      io.to(receiverSocketId).emit("user-typing",{
+      conversationId,
+});
     }
   });
 
-  socket.on("stop-typing", ({ to }) => {
+  socket.on("stop-typing", ({ to,conversationId }) => {
     const receiverSocketId = onlineUsers.get(to);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("user-stop-typing");
+      io.to(receiverSocketId).emit("user-stop-typing",{
+      conversationId,
+});
     }
   });
 
@@ -38,8 +44,8 @@ export async function socketHandlers(socket, io) {
     console.log("📨 Message sent:", messageData);
 
     try {
-
-       const savedMessage = await sendMessage(messageData?.senderId, messageData?.receiverId, messageData?.text);
+      console.log(messageData)
+      const savedMessage = await sendMessage(messageData?.senderId, messageData?.receiverId, messageData?.text);
 
       // Send back to sender (confirmation)
       socket.emit("message-sent", savedMessage);

@@ -1,13 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { Video, Phone, ArrowLeft } from "lucide-react";
+import { useSelector } from "react-redux";
+import {getLastSeen} from "../../utils/TimeHandler"
+import { formatDistanceToNow } from "date-fns";
 
 const ChatHeader = ({
-  user,
   onAudioCall,
   onVideoCall,
   isOnline,
+  conversation,
   handleBack,
 }) => {
+
+  const {user} = useSelector((state) => state.auth);
+
+  const otherUser = conversation?.members?.find(
+    (member) => member._id !== user?.user?._id
+  );
+
+  const currentChatUserLastSeen = getLastSeen(otherUser?.lastSeen);
+  console.log(currentChatUserLastSeen);
+
+
+
+
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -33,22 +49,22 @@ const ChatHeader = ({
         )}
 
         <img
-          src="/assets/images/image.jpg"
-          alt={user?.name}
+          src={otherUser?.profilePic}
+          alt={otherUser?.fullName}
           className="w-10 h-10 rounded-full object-cover"
         />
 
         <div className="flex flex-col leading-tight">
           <span className="font-medium text-sm text-gray-800 whitespace-nowrap">
-            Mushahid Hussain
+            {otherUser?.fullName}
           </span>
-          <span className="text-xs text-gray-500 truncate max-w-[120px]">
-            {isOnline ? "Online" : `Last seen ${user?.lastSeen}`}
+          <span className="text-xs text-gray-500  max-w-[150px]">
+            {otherUser?.onlineStatus===true ? "Online" : `${currentChatUserLastSeen}`}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 relative xs:left-3">
         <button
           onClick={onAudioCall}
           className="p-2 rounded-full bg-[#EDF1FC] hover:bg-[#e1e8fc] transition"

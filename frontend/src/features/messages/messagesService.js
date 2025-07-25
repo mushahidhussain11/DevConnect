@@ -14,6 +14,14 @@ class MessagesService {
     });
     return res.data;
   }
+
+  async fetchConversationMessages(credentials) {
+    console.log(credentials);
+    const res = await axios.get(`/api/messages/${credentials}`, {
+      withCredentials: true,
+    });
+    return res.data;
+  }
  
   
 }

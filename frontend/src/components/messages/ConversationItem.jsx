@@ -5,7 +5,7 @@ import ConversationDeleteModal from "../ConversationDeleteModal";
 import { deleteConversation } from "../../features/messages/messagesSlice";
 import { getLastSeen } from "../../utils/TimeHandler";
 
-const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
+const ConversationItem = ({ conversation, onSelect, onDelete,isSelected,setSelectedConversation,setUserConversations }) => {
   const { isAI, _id } = conversation;
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -34,6 +34,13 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
   const menuRef = useRef(null);
 
 
+  // const isCreatedByCurrentUser = conversation?.createdBy?.includes(user?.user?._id);
+
+
+  // if(!isCreatedByCurrentUser && !isAI && conversation?.numberOfMessages === 0) {
+  //   return null
+  // }
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -46,7 +53,7 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
   }, []);
 
 
-  const deleteHandler = async ()=>{
+  const deleteHandler = async ()=> {
 
      try {
 
@@ -66,9 +73,18 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
   // Delete handler
   const handleDelete = async () => {
     await deleteHandler()
+
+    
+    
     setTimeout(() => {
      setIsVisible(false);
     }, 500);
+
+    setSelectedConversation(null);
+
+    setUserConversations((prev) =>
+      prev.filter((conv) => conv?._id !== conversation?._id)
+    );
   };
 
   if (!isVisible) return null;

@@ -63,7 +63,7 @@ const MessageSection = () => {
           selectedConversation && (isMobile || isTablet ) ? "hidden" : "block"
         } w-full lg:w-1/4 xl:w-1/4 bg-white rounded-xl shadow-md p-2 xl:p-3 lg:p-3 xl:h-[calc(100vh-6rem)] relative xl:bottom-2 lg:bottom-2 lg:h-[calc(100vh-6rem)] overflow-y-auto md:h-[calc(100vh-9rem)] sm:h-[calc(100vh-8rem)] h-[37rem] bottom-2` }
       >
-        <ConversationList onSelect={handleSelectConversation} selectedConversation={selectedConversation} userConversations={userConversations}  isLoadingConversations={isLoadingConversations} />
+        <ConversationList onSelect={handleSelectConversation} selectedConversation={selectedConversation} setSelectedConversation={setSelectedConversation} userConversations={userConversations}  isLoadingConversations={isLoadingConversations} setUserConversations={setUserConversations} />
       </div>
 
       {/* Right Side: Chat */}

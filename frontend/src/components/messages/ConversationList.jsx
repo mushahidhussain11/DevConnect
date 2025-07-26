@@ -3,35 +3,36 @@ import ConversationItem from "./ConversationItem";
 import CreateConversationModal from "../CreateConversationModal";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllOtherUsers } from "../../features/user/userSlice";
-import {
-  
-  MessageCircleOffIcon,
-} from "lucide-react";
-import {
-  createConversationWithUser,
-} from "../../features/messages/messagesSlice";
+import { MessageCircleOffIcon } from "lucide-react";
+import { createConversationWithUser } from "../../features/messages/messagesSlice";
+import LoadingSpinner from "../LoadingSpinner";
+
+import { motion } from "framer-motion";
 
 import ConversationSkeleton from "../ConversationSkeleton";
 
-const ConversationList = ({ onSelect,selectedConversation,userConversations,isLoadingConversations }) => {
+const ConversationList = ({
+  onSelect,
+  selectedConversation,
+  userConversations,
+  isLoadingConversations,
+  setSelectedConversation,
+  setUserConversations,
+}) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
   const [users, setUsers] = useState([]);
-  // const [userConversations, setUserConversations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [isLoadingConversations, setIsLoadingConversations] = useState(false);
- 
-
-
+  const [isConversationCreating, setIsConversationCreating] = useState(false);
+  console.log(userConversations)
   const aiConversation = {
     id: "ai",
     name: "DevConnect AI",
     isAI: true,
-    
   };
 
-  console.log(selectedConversation,aiConversation)
+  console.log(selectedConversation, aiConversation);
 
   // Fetch all other users
   useEffect(() => {
@@ -50,21 +51,23 @@ const ConversationList = ({ onSelect,selectedConversation,userConversations,isLo
   }, [dispatch, user?.user?._id]);
 
   // Fetch user conversations
- 
 
   // Handle starting new conversation
   const handleStartConversation = async (selectedUser) => {
-    
     const existing = userConversations.find((conv) =>
       conv?.members?.find((member) => member._id === selectedUser._id)
     );
 
+    console.log(existing)
+
     if (existing) {
+      setUserConversations((prev) => [existing, ...prev]);
       onSelect(existing);
       return;
     }
 
     try {
+      setIsConversationCreating(true);
       const payload = {
         senderId: user?.user?._id,
         receiverId: selectedUser._id,
@@ -75,11 +78,13 @@ const ConversationList = ({ onSelect,selectedConversation,userConversations,isLo
       ).unwrap();
 
       if (response?.conversation) {
-        setUserConversations((prev) => [response.conversation, ...prev]);
-        onSelect(response.conversation);
+        setUserConversations((prev) => [response?.conversation, ...prev]);
+        onSelect(response?.conversation);
       }
     } catch (error) {
       console.error("Error starting conversation:", error);
+    } finally {
+      setIsConversationCreating(false);
     }
   };
 
@@ -113,7 +118,7 @@ const ConversationList = ({ onSelect,selectedConversation,userConversations,isLo
                 conversation={aiConversation}
                 onSelect={() => onSelect(aiConversation)}
                 isSelected={selectedConversation?.id === aiConversation.id}
-                
+                setUserConversations={setUserConversations}
               />
               <div className="border-t border-gray-200 mt-3" />
             </div>
@@ -127,6 +132,8 @@ const ConversationList = ({ onSelect,selectedConversation,userConversations,isLo
                     conversation={conv}
                     onSelect={() => onSelect(conv)}
                     isSelected={selectedConversation?._id === conv._id}
+                    setSelectedConversation={setSelectedConversation}
+                    setUserConversations={setUserConversations}
                   />
                 ))
               ) : (
@@ -152,6 +159,27 @@ const ConversationList = ({ onSelect,selectedConversation,userConversations,isLo
               users={users}
               onStartConversation={handleStartConversation}
             />
+
+            {isConversationCreating && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm animate-fade-in px-4">
+                <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm sm:max-w-md">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      className="w-6 h-6 border-[3px] border-primary border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 0.8,
+                        ease: "linear",
+                      }}
+                    />
+                    <h4 className="text-lg sm:text-xl font-semibold text-gray-800">
+                      Creating Conversation
+                    </h4>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

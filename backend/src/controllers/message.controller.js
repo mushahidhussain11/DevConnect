@@ -25,6 +25,9 @@ export async function sendMessage(senderId, receiverId, text) {
         receiverId,
         text,
       });
+
+      newConversation.numberOfMessages = newConversation.numberOfMessages + 1; 
+      await newConversation.save();
       return newMessage;
     }
     
@@ -37,6 +40,9 @@ export async function sendMessage(senderId, receiverId, text) {
       receiverId,
       text,
     });
+
+     conversation.numberOfMessages = conversation.numberOfMessages + 1; 
+      await conversation.save();
 
     conversation.updatedAt = Date.now();
     await conversation.save();

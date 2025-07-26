@@ -22,6 +22,14 @@ class MessagesService {
     });
     return res.data;
   }
+
+  async deleteConversation(credentials) {
+    console.log(credentials);
+    const res = await axios.delete(`/api/conversations/${credentials}`, {
+      withCredentials: true,
+    });
+    return res.data;
+  }
  
   
 }

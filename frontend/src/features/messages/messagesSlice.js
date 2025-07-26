@@ -55,6 +55,22 @@ export const fetchConversationMessages = createAsyncThunk(
   }
 );
 
+export const deleteConversation = createAsyncThunk(
+  "messages/deleteConversation",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await messagesService.deleteConversation(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+
 
 
 

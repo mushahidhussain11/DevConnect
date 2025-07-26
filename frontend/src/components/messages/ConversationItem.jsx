@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { MoreVertical } from "lucide-react";
 import ConversationDeleteModal from "../ConversationDeleteModal";
+import { deleteConversation } from "../../features/messages/messagesSlice";
 import { getLastSeen } from "../../utils/TimeHandler";
 
 const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
   const { isAI, _id } = conversation;
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   // const [isSelected,setIsSelected] = useState(false)
 
@@ -28,7 +30,9 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const menuRef = useRef(null);
+
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -41,13 +45,30 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+  const deleteHandler = async ()=>{
+
+     try {
+
+      setIsDeleting(true)
+      const response = await dispatch(deleteConversation(conversation?._id)).unwrap();
+    }catch (error) {
+      console.log("Error in deleting conversation", error);
+
+    } finally {
+      setIsDeleting(false)
+      setShowModal(false)
+    }
+
+
+  }
+
   // Delete handler
-  const handleDelete = () => {
-    setIsVisible(false);
+  const handleDelete = async () => {
+    await deleteHandler()
     setTimeout(() => {
-      onDelete?.(_id);
-      setShowModal(false);
-    }, 300);
+     setIsVisible(false);
+    }, 500);
   };
 
   if (!isVisible) return null;
@@ -56,7 +77,7 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
     <>
       <div
         onClick={onSelect}
-        className={`relative flex items-center gap-3 px-2 py-2 rounded-xl cursor-pointer  hover:bg-[#f1f4ff] hover:shadow-sm transition-all duration-300 group hover:border-primary/20 ${isSelected ? "bg-[#f1f4ff] shadow-sm border border-primary/20" : "bg-white backdrop-blur-sm border shadow-sm  border-gray-200"}
+        className={`relative flex items-center gap-3 px-2 py-2 rounded-xl cursor-pointer  hover:bg-[#f1f4ff] hover:shadow-sm transition-all duration-500 group hover:border-primary/20 ${isSelected ? "bg-[#f1f4ff] shadow-sm border border-primary/20" : "bg-white backdrop-blur-sm border shadow-sm  border-gray-200"}
         ${!isVisible ? "opacity-0 scale-95" : "animate-fade-in"}`}
       >
         {/* Avatar */}
@@ -105,17 +126,14 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
             className="p-1 rounded-full hover:bg-gray-100 z-10"
           >
             <MoreVertical size={18} className="text-gray-500" />
-          </div>
-        )}
 
-        {/* Dropdown */}
-        {menuOpen && (
-          <div className="absolute top-[-28px] right-4 w-32 bg-white shadow-lg rounded-lg border border-gray-200 z-20 animate-fade-in-fast">
+             {menuOpen && (
+          <div className="absolute top-[-28px] right-4 w-32 bg-white shadow-lg rounded-lg border border-gray-200 z-20 animate-fade-in">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(false);
+              onClick={() => {
                 setShowModal(true);
+                setMenuOpen(false);
+                
               }}
               className="w-full px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 hover:text-red-700 transition rounded-lg"
             >
@@ -123,6 +141,13 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
             </button>
           </div>
         )}
+
+
+          </div>
+        )}
+
+        {/* Dropdown */}
+       
       </div>
 
       {/* Confirm Delete Modal */}
@@ -130,8 +155,8 @@ const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
         <ConversationDeleteModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          onConfirm={handleDelete}
-          conversation={conversation}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
         />
       )}
     </>

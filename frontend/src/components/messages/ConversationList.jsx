@@ -4,8 +4,7 @@ import CreateConversationModal from "../CreateConversationModal";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllOtherUsers } from "../../features/user/userSlice";
 import {
-  MessageCircleIcon,
-  MessageSquareCode,
+  
   MessageCircleOffIcon,
 } from "lucide-react";
 import {

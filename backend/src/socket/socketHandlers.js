@@ -46,6 +46,7 @@ export async function socketHandlers(socket, io) {
     try {
       console.log(messageData)
       const savedMessage = await sendMessage(messageData?.senderId, messageData?.receiverId, messageData?.text);
+      const conversationId = messageData?.conversationId;
 
       // Send back to sender (confirmation)
       socket.emit("message-sent", savedMessage);
@@ -54,7 +55,7 @@ export async function socketHandlers(socket, io) {
       const receiverSocketId = onlineUsers.get(messageData?.receiverId);
       if (receiverSocketId) {
         console.log("Message goes live")
-        io.to(receiverSocketId).emit("receive-message", savedMessage);
+        io.to(receiverSocketId).emit("receive-message", {savedMessage,conversationId});
       } else {
         console.log("❌ Receiver not online:", messageData.receiverId);
       }

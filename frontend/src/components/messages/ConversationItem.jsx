@@ -4,9 +4,11 @@ import { MoreVertical } from "lucide-react";
 import ConversationDeleteModal from "../ConversationDeleteModal";
 import { getLastSeen } from "../../utils/TimeHandler";
 
-const ConversationItem = ({ conversation, onSelect, onDelete }) => {
+const ConversationItem = ({ conversation, onSelect, onDelete,isSelected }) => {
   const { isAI, _id } = conversation;
   const { user } = useSelector((state) => state.auth);
+
+  // const [isSelected,setIsSelected] = useState(false)
 
   const otherUser = conversation?.members?.find(
     (member) => member._id !== user?.user?._id
@@ -54,7 +56,7 @@ const ConversationItem = ({ conversation, onSelect, onDelete }) => {
     <>
       <div
         onClick={onSelect}
-        className={`relative flex items-center gap-3 px-2 py-2 rounded-xl cursor-pointer bg-white backdrop-blur-sm border border-gray-200 hover:bg-[#f1f4ff] hover:shadow-sm transition-all duration-300 group hover:border-primary/20 
+        className={`relative flex items-center gap-3 px-2 py-2 rounded-xl cursor-pointer  hover:bg-[#f1f4ff] hover:shadow-sm transition-all duration-300 group hover:border-primary/20 ${isSelected ? "bg-[#f1f4ff] shadow-sm border border-primary/20" : "bg-white backdrop-blur-sm border shadow-sm  border-gray-200"}
         ${!isVisible ? "opacity-0 scale-95" : "animate-fade-in"}`}
       >
         {/* Avatar */}
@@ -77,7 +79,7 @@ const ConversationItem = ({ conversation, onSelect, onDelete }) => {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-800 truncate group-hover:text-primary transition-colors duration-150">
+          <div className={`text-sm font-medium ${isSelected ? "text-primary" : "text-gray-800"}  truncate group-hover:text-primary transition-colors duration-150`}>
             {name}
           </div>
           {!isAI && (

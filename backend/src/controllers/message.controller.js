@@ -37,6 +37,10 @@ export async function sendMessage(senderId, receiverId, text) {
       receiverId,
       text,
     });
+
+    conversation.updatedAt = Date.now();
+    await conversation.save();
+
     return newMessage;
   } catch (error) {
     console.log("Error in send message controller", error);

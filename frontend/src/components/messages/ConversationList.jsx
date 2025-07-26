@@ -9,20 +9,20 @@ import {
   MessageCircleOffIcon,
 } from "lucide-react";
 import {
-  fetchUserConversations,
   createConversationWithUser,
 } from "../../features/messages/messagesSlice";
 
 import ConversationSkeleton from "../ConversationSkeleton";
 
-const ConversationList = ({ onSelect }) => {
+const ConversationList = ({ onSelect,selectedConversation,userConversations,isLoadingConversations }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
   const [users, setUsers] = useState([]);
-  const [userConversations, setUserConversations] = useState([]);
+  // const [userConversations, setUserConversations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+  // const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+ 
 
 
   const aiConversation = {
@@ -31,6 +31,8 @@ const ConversationList = ({ onSelect }) => {
     isAI: true,
     
   };
+
+  console.log(selectedConversation,aiConversation)
 
   // Fetch all other users
   useEffect(() => {
@@ -49,28 +51,11 @@ const ConversationList = ({ onSelect }) => {
   }, [dispatch, user?.user?._id]);
 
   // Fetch user conversations
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        setIsLoadingConversations(true);
-        const response = await dispatch(
-          fetchUserConversations(user?.user?._id)
-        ).unwrap();
-        setUserConversations(response?.conversations || []);
-      } catch (error) {
-        console.log("Error fetching conversations:", error);
-      } finally {
-        setIsLoadingConversations(false);
-      }
-    };
-
-    if (user?.user?._id) fetchConversations();
-  }, [dispatch, user?.user?._id]);
+ 
 
   // Handle starting new conversation
   const handleStartConversation = async (selectedUser) => {
-    console.log(selectedUser);
-    console.log(userConversations);
+    
     const existing = userConversations.find((conv) =>
       conv?.members?.find((member) => member._id === selectedUser._id)
     );
@@ -128,6 +113,8 @@ const ConversationList = ({ onSelect }) => {
                 key={aiConversation.id}
                 conversation={aiConversation}
                 onSelect={() => onSelect(aiConversation)}
+                isSelected={selectedConversation?.id === aiConversation.id}
+                
               />
               <div className="border-t border-gray-200 mt-3" />
             </div>
@@ -140,6 +127,7 @@ const ConversationList = ({ onSelect }) => {
                     key={conv._id}
                     conversation={conv}
                     onSelect={() => onSelect(conv)}
+                    isSelected={selectedConversation?._id === conv._id}
                   />
                 ))
               ) : (

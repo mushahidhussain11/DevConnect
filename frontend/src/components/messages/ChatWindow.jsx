@@ -10,7 +10,7 @@ import { fetchConversationMessages } from "../../features/messages/messagesSlice
 import MessageSkeleton from "../MessageSkeleton";
 import { getSocket } from "../../lib/socket";
 
-const ChatWindow = ({ conversation, handleBack }) => {
+const ChatWindow = ({ conversation, handleBack,setUserConversations }) => {
   const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
@@ -72,8 +72,10 @@ const ChatWindow = ({ conversation, handleBack }) => {
   useEffect(() => {
     if (!conversation?._id) return;
 
-    socket.on("receive-message", (msg) => {
-      setMessages((prev) => [...prev, msg]);
+    socket.on("receive-message", ({savedMessage,conversationId}) => {
+      if (conversationId === conversation?._id) {
+        setMessages((prevMessages) => [...prevMessages, savedMessage]);
+      }
     });
 
     // Typing indicator
@@ -111,10 +113,36 @@ const ChatWindow = ({ conversation, handleBack }) => {
       createdAt: new Date().toISOString(),
     };
 
+
+ setUserConversations(prev => {
+  const index = prev.findIndex(c => c._id === conversation?._id);
+  if (index === -1) {
+    console.log("Conversation not found");
+    return prev;
+  }
+
+  const updatedConv = {
+    ...prev[index],
+  };
+
+  const newConvs = [
+    updatedConv,
+    ...prev.slice(0, index),
+    ...prev.slice(index + 1),
+  ];
+
+  console.log("Returning new conversations list:", newConvs);
+  return newConvs;
+});
+
+
+
+
     // Emit to server
     socket.emit("send-message", {
       senderId: user?.user?._id,
       receiverId: otherUser?._id,
+       conversationId: conversation?._id,
       text: input,
     });
 

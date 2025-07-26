@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch,useSelector } from "react-redux";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import DevConnectAI from "./DevConnectAI";
 import { ArrowLeft } from "lucide-react";
+import {
+  fetchUserConversations,
+} from "../../features/messages/messagesSlice";
 
 const MessageSection = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const [userConversations,setUserConversations] = useState([]);
+  const [isLoadingConversations,setIsLoadingConversations] = useState(false);
+   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
@@ -26,6 +34,27 @@ const MessageSection = () => {
   const isMobile = screenWidth < 768;
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
 
+  
+
+
+   useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setIsLoadingConversations(true);
+        const response = await dispatch(
+          fetchUserConversations(user?.user?._id)
+        ).unwrap();
+        setUserConversations(response?.conversations || []);
+      } catch (error) {
+        console.log("Error fetching conversations:", error);
+      } finally {
+        setIsLoadingConversations(false);
+      }
+    };
+
+    if (user?.user?._id) fetchConversations();
+  }, [dispatch, user?.user?._id]);
+
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* Left Side: Conversation List */}
@@ -34,7 +63,7 @@ const MessageSection = () => {
           selectedConversation && (isMobile || isTablet ) ? "hidden" : "block"
         } w-full lg:w-1/4 xl:w-1/4 bg-white rounded-xl shadow-md p-2 xl:p-3 lg:p-3 xl:h-[calc(100vh-6rem)] relative xl:bottom-2 lg:bottom-2 lg:h-[calc(100vh-6rem)] overflow-y-auto md:h-[calc(100vh-9rem)] sm:h-[calc(100vh-8rem)] h-[37rem] bottom-2` }
       >
-        <ConversationList onSelect={handleSelectConversation} />
+        <ConversationList onSelect={handleSelectConversation} selectedConversation={selectedConversation} userConversations={userConversations}  isLoadingConversations={isLoadingConversations} />
       </div>
 
       {/* Right Side: Chat */}
@@ -50,7 +79,7 @@ const MessageSection = () => {
         ) : selectedConversation ? (
           <>
             
-            <ChatWindow handleBack={handleBack} conversation={selectedConversation} />
+            <ChatWindow handleBack={handleBack} conversation={selectedConversation}  setUserConversations={setUserConversations} />
           </>
         ) : (
           <div className="hidden lg:flex flex-col items-center justify-center h-full text-gray-400">

@@ -16,40 +16,50 @@ export async function getUserConversations(req, res) {
     //   .populate("members", "fullName onlineStatus lastSeen profilePic _id")
     //   .sort({ updatedAt: -1 });
 
-  let conversations = await Conversation.find({members: userId })
-.populate("members", "fullName onlineStatus lastSeen profilePic _id")
-.sort({ updatedAt: -1 })
-.lean();
+    let conversations = await Conversation.find({ members: userId })
+      .populate("members", "fullName onlineStatus lastSeen profilePic _id")
+      .sort({ updatedAt: -1 })
+      .lean();
 
-console.log(conversations)
+    console.log(conversations);
 
-const finalConversations = [];
+    const finalConversations = [];
 
-for (const conv of conversations) {
-  const userDeleted = conv.deletedBy.some(id => id.toString() === userId.toString());
-  const userCreated = conv.createdBy.some(id => id.toString() === userId.toString());
+    for (const conv of conversations) {
+      const userDeleted = conv.deletedBy.some(
+        (id) => id.toString() === userId.toString()
+      );
+      const userCreated = conv.createdBy.some(
+        (id) => id.toString() === userId.toString()
+      );
 
-  if (!userDeleted) {
-    // ✅ User didn't delete the conversation
-    if (userCreated || conv.numberOfMessages > 0) {
-      finalConversations.push(conv);
-    }
-  } else {
-    // 🟡 User deleted it → Check if new messages came after deletion
-    const hasNewMessages = await Message.exists({
-      conversationId: conv._id,
-      createdAt: { $gt: conv.deletedAt },
-    });
+      if (!userDeleted) {
+        // ✅ User didn't delete the conversation
+        if (userCreated || conv.numberOfMessages > 0) {
+          finalConversations.push(conv);
+        }
+      } else {
+        // 🟡 User deleted it → Check if new messages came after deletion
 
-    if (hasNewMessages) {
-      if (userCreated || conv.numberOfMessages > 0) {
-        finalConversations.push(conv);
+        const userDeleted = conv?.deleted?.find(
+          (item) => item.by.toString() === req.user._id.toString()
+        );
+
+        const deletedAt = userDeleted?.at;
+        const hasNewMessages = await Message.exists({
+          conversationId: conv._id,
+          createdAt: { $gt: deletedAt },
+        });
+
+        if (hasNewMessages) {
+          if (userCreated || conv.numberOfMessages > 0) {
+            finalConversations.push(conv);
+          }
+        }
       }
     }
-  }
-}
 
-  conversations = finalConversations
+    conversations = finalConversations;
 
     res
       .status(200)
@@ -99,8 +109,26 @@ export async function deleteConversation(req, res) {
       });
     } else {
       // First time delete by this user
-      conversation.deletedBy = req.user?._id;
-      conversation.deletedAt = Date.now();
+      conversation?.deletedBy?.push(req.user?._id);
+
+      const existingIndex = conversation.deleted.findIndex(
+        (item) => item?.by?.toString() === req.user?._id.toString()
+      );
+
+      if (existingIndex !== -1) {
+        // Replace the existing entry
+        conversation.deleted[existingIndex] = {
+          by: req.user._id,
+          at: Date.now(),
+        };
+      } else {
+        // Add a new entry
+        conversation.deleted.push({
+          by: req.user._id,
+          at: Date.now(),
+        });
+      }
+
       await conversation.save();
 
       return res.status(200).json({
@@ -136,7 +164,8 @@ export async function createConversation(req, res) {
     if (conversation) {
       // If soft-deleted by sender, restore it
       if (conversation.deletedBy?.includes(senderId)) {
-        conversation.deletedBy = null;
+        conversation.deletedBy = [];
+
         await conversation.save();
 
         return res.status(200).json({
@@ -144,6 +173,9 @@ export async function createConversation(req, res) {
           conversation,
         });
       }
+
+      conversation.createdBy.push(senderId);
+      await conversation.save();
 
       return res.status(200).json({
         message: "Conversation already exists",

@@ -2,7 +2,6 @@ import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import mongoose from "mongoose";
 export async function sendMessage(senderId, receiverId, text) {
-
   console.log(senderId, receiverId, text);
   try {
     if (!mongoose.Types.ObjectId.isValid(senderId))
@@ -26,11 +25,11 @@ export async function sendMessage(senderId, receiverId, text) {
         text,
       });
 
-      newConversation.numberOfMessages = newConversation.numberOfMessages + 1; 
+      newConversation.numberOfMessages = newConversation.numberOfMessages + 1;
       await newConversation.save();
       return newMessage;
     }
-    
+
     const conversation = await Conversation.findOne({
       members: { $all: [senderId, receiverId] },
     });
@@ -41,8 +40,10 @@ export async function sendMessage(senderId, receiverId, text) {
       text,
     });
 
-     conversation.numberOfMessages = conversation.numberOfMessages + 1; 
-      await conversation.save();
+    conversation.numberOfMessages = conversation.numberOfMessages + 1;
+
+    conversation.deletedBy = [];
+    await conversation.save();
 
     conversation.updatedAt = Date.now();
     await conversation.save();
@@ -59,7 +60,20 @@ export async function getMessagesByConversation(req, res) {
     if (!mongoose.Types.ObjectId.isValid(conversationId))
       return res.status(400).json({ message: "Invalid conversation id" });
 
-    const messages = await Message.find({ conversationId })
+    // Step 1: Get the conversation
+    const conversation = await Conversation.findById(conversationId);
+
+    // Step 2: Find when the current user deleted the conversation
+    const deletion = conversation.deleted.find(
+      (d) => d.by.toString() === req.user._id.toString()
+    );
+
+    // Step 3: Query messages after deletion time (if deleted)
+    const messages = await Message.find({
+      conversationId,
+      ...(deletion?.at && { createdAt: { $gt: deletion.at } }), // Only apply filter if user has deleted
+    });
+
     return res
       .status(200)
       .json({ message: "Messages fetched successfully", messages });
@@ -68,9 +82,3 @@ export async function getMessagesByConversation(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
-
-
-
-
-

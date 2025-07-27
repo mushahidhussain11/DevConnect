@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const conversationSchema = new mongoose.Schema(
   {
-    
     members: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -27,17 +26,24 @@ const conversationSchema = new mongoose.Schema(
       },
     ],
 
-
-    deletedAt:{
-      type: Date,
-    },
+    deleted: [
+     {
+       at: {
+        type: Date,
+      },
+      by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+     }
+    ],
 
     numberOfMessages: {
       type: Number,
       default: 0,
     },
 
-     createdBy: [
+    createdBy: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { signUpUser, socialLogin } from "../../features/auth/authSlice";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../LoadingSpinner";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { createSocket } from "../../lib/socket";
 
 const Signup = () => {

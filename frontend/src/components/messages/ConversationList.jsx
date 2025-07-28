@@ -6,7 +6,7 @@ import { getAllOtherUsers } from "../../features/user/userSlice";
 import { MessageCircleOffIcon } from "lucide-react";
 import { createConversationWithUser } from "../../features/messages/messagesSlice";
 import LoadingSpinner from "../LoadingSpinner";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 
 import { motion } from "framer-motion";
 

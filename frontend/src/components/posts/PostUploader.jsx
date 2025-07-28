@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { useDispatch } from "react-redux";
 import { createPost } from "../../features/posts/postsSlice";
 import LoadingSpinner from "../LoadingSpinner";

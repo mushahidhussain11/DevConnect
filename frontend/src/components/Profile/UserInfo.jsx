@@ -4,7 +4,7 @@ import { Check, Plus } from "lucide-react";
 import { useState,useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { followUser,unfollowUser } from "../../features/user/userSlice";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 
 const UserInfo = ({
   profileUser,
@@ -56,7 +56,7 @@ const UserInfo = ({
     if (isFollowing) {
       await dispatch(unfollowUser(id)).unwrap();
       setIsFollowing(false);
-      toast.info("User Unfollowed successfully");
+      toast.success("User Unfollowed successfully");
     } else {
       await dispatch(followUser(id)).unwrap();
       setIsFollowing(true);

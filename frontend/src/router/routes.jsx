@@ -29,10 +29,12 @@ const routes = [
   { path: "/notifications", element: <ProtectedRoute> <NotificationsPage/> </ProtectedRoute> },
   { path: "/messages", element: <ProtectedRoute> <Messages/> </ProtectedRoute> },
    { path: "/projects", element: <ProtectedRoute> <ProjectsPage/> </ProtectedRoute> },
-  // { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
-  // { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },
+  { path: "/reset-success", element:  <PasswordResetSuccessPage /> },
+  { path: "/reset-link-sent-success", element:  <ForgotPasswordConfirmationPage /> },
   {path: "*", element: <NotFoundPage />}
 
 ];
+
+
 
 export default routes;

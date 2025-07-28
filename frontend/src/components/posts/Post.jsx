@@ -12,7 +12,7 @@ import {
 import { ThumbsUp, Heart } from "phosphor-react";
 import { FaLaughSquint } from "react-icons/fa";
 import { GiPartyPopper } from "react-icons/gi";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { useDispatch } from "react-redux";
 import { fetchComments } from "../../features/comments/commentsSlice";
 import { setAndUnsetReaction } from "../../features/posts/postsSlice";

@@ -68,7 +68,7 @@ app.use("/api/messages", messageRoutes);
 
 initializeSocket(server);
 
-server.listen(PORT,"0.0.0.0", () => {
+server.listen(PORT, () => {
     connectToDB();
     console.log(`Server started on port ${PORT}`);
 });

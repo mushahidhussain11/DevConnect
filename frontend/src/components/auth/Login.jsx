@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { loginUser, socialLogin } from "../../features/auth/authSlice";
 import LoadingSpinner from "../LoadingSpinner";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { createSocket } from "../../lib/socket";
 import { useState } from "react";
 const Login = () => {

@@ -145,14 +145,14 @@ export async function forgotPassword(req, res) {
     await user.save();
 
     
-    await sendPasswordResetEmail(
+    const response = await sendPasswordResetEmail(
       user.email,
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`
     );
 
     res
       .status(200)
-      .json({ message: "Password reset token sent to your email" });
+      .json({ message: "Password reset token sent to your email",response });
   } catch (error) {
     console.log("Error in forgotPassword controller", error);
     res.status(500).json({ message: "Internal Server Error" });

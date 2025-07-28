@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import SuggestedUsersSkeleton from "../SuggestedUsersSkeleton";
 import { followUser } from "../../features/user/userSlice";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 
 const RightSidebar = () => {
   const dispatch = useDispatch();

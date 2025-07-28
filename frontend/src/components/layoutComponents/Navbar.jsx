@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../features/auth/authSlice";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { getSocket } from "../../lib/socket";
 
 const Navbar = ({ currentUser }) => {
@@ -36,6 +36,7 @@ const Navbar = ({ currentUser }) => {
       if (socket) {
         socket.disconnect();
       }
+       toast.success("Logged Out Successfully!");
       navigate("/login");
     } catch (error) {
       toast.error("Logout Failed!");

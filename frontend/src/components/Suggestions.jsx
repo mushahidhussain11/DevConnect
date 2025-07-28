@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getSuggestedUsers, followUser } from "../features/user/userSlice";
 import SuggestedUsersSkeleton from "./SuggestedUsersSkeleton";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 

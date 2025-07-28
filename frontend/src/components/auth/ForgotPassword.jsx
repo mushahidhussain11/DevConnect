@@ -27,7 +27,17 @@ const ForgotPassword = () => {
 
     
     try {
-      await dispatch(forgotPassword(data)).unwrap(); // Assuming this action exists
+      const response = await dispatch(forgotPassword(data)).unwrap();
+      console.log(response)
+      
+      if(response?.response?.error?.statusCode===403) {
+        setError("root", {
+        type: "server",
+        message: "Here is some technical issue, Please try again Later.",
+      });
+
+      return;
+      }// Assuming this action exists
       navigate("/reset-link-sent-success", { state: { email: data?.email } });
     } catch (error) {
       setError("root", {

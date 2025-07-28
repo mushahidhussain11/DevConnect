@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getSearchedUsers } from "../features/user/userSlice";
 import { followUser, unfollowUser } from "../features/user/userSlice";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { Check } from "lucide-react";
 import SearchUsersSkeleton from "./SearchUsersSkeleton";
 
@@ -47,7 +47,7 @@ export default function SearchPage() {
           })
         );
 
-        toast.info("User Unfollowed successfully");
+        toast.success("User Unfollowed successfully");
       } else {
         await dispatch(followUser(id)).unwrap();
 

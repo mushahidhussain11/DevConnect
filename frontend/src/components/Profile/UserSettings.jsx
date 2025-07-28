@@ -4,7 +4,7 @@ import { Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { updateUserInfo } from "../../features/user/userSlice";
 import { updateCurrentUserInfo } from "../../features/auth/authSlice";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import LoadingSpinner from "../LoadingSpinner";
 import { updateProfileUserInfo } from "../../features/user/userSlice";
 // import { updateUserInfo } from "../../redux/slices/userSlice";

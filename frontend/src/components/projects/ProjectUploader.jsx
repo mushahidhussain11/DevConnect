@@ -9,7 +9,7 @@ import {
   FolderKanban,
   Layers,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from 'react-hot-toast';
 import { useDispatch } from "react-redux";
 import { createProject } from "../../features/projects/projectsSlice";
 import { incrementProjectCount } from "../../features/auth/authSlice";

@@ -6,7 +6,7 @@ import { deleteConversation } from "../../features/messages/messagesSlice";
 import { getLastSeen } from "../../utils/TimeHandler";
 
 const ConversationItem = ({ conversation, onSelect, onDelete,isSelected,setSelectedConversation,setUserConversations }) => {
-  const { isAI, _id } = conversation;
+  const { isAI  } = conversation;
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 

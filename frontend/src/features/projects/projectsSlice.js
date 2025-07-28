@@ -132,7 +132,8 @@ const projectsSlice = createSlice({
       })
 
       .addCase(createProject.fulfilled, (state, action) => {
-        state.projects = [action.payload?.createdProject, ...state.projects];
+       
+        state.projects = [action.payload?.newProject, ...state.projects];
       })
 
       .addCase(updateProject.fulfilled, (state, action) => {

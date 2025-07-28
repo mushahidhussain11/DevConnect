@@ -1,18 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiSend } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
 import EmojiPicker from "emoji-picker-react";
 import DevConnectAIWelcome from "./DevConnectAIWelcome";
 import DevConnectAIBubble from "./DevConnectAIBubble";
 import ChatItem from "./ChatItem";
 import { Smile,ArrowLeft } from "lucide-react";
+import { fetchConversationMessages } from "../../features/messages/messagesSlice";
+import { sendAIMessage } from "../../features/messages/messagesSlice";
+import ChatHeaderForAI from "./ChatHeaderForAI";
 
-const DevConnectAI = ({handleBack}) => {
+const DevConnectAI = ({handleBack,conversation}) => {
+
+
   const bottomRef = useRef(null);
 
-  const currentUser = {
-    _id: "123",
-    name: "Demo User",
-  };
+  const currentUser = useSelector((state) => state?.auth?.user);
+  console.log(currentUser)
+
+  const dispatch = useDispatch();
+
+  console.log(conversation)
+
+   // Fixed AI sender ID
+  const AI_ID = "64b7f7f96fdd1c0001a0a1a1"
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -20,6 +31,7 @@ const DevConnectAI = ({handleBack}) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [typingText, setTypingText] = useState("");
   const emojiRef = useRef(null);
+ const [isLoading,setIsLoading] = useState(false)
 
    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   
@@ -54,47 +66,107 @@ const DevConnectAI = ({handleBack}) => {
     };
   }, [showEmojiPicker]);
 
+
+
+
   const handleSend = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    const userMessage = {
-      sender: currentUser._id,
-      text: input.trim(),
-      timestamp: new Date().toISOString(),
-    };
+  let aiFullResponse = ""
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setLoadingResponse(true);
-    setTypingText("");
-
-    const aiFullResponse =
-      "Dev Connect is an innovative initiative designed to bridge the gap between aspiring developers, industry professionals, and technology enthusiasts through collaborative learning, networking, and knowledge-sharing opportunities. The core idea of Dev Connect is to create a dynamic ecosystem where individuals from diverse backgrounds—ranging from students and early-career developers to experienced engineers and entrepreneurs—can engage in meaningful discussions, workshops, and project-based learning. The platform not only promotes technical excellence by hosting sessions on trending technologies like MERN stack, DevOps, AI, and cloud computing, but also encourages soft skill development through team-based projects, hackathons, and real-world problem-solving challenges. Dev Connect acts as a launchpad for young talent by offering mentorship, career guidance, and exposure to current industry practices, ultimately empowering participants to thrive in the fast-paced world of software development.";
-
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < aiFullResponse.length) {
-        setTypingText((prev) => prev + aiFullResponse[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            text: aiFullResponse,
-            timestamp: new Date().toISOString(),
-          },
-        ]);
-        setTypingText("");
-        setLoadingResponse(false);
-      }
-    }, 15);
+  const userMessage = {
+    senderId: currentUser?.user?._id,
+    receiverId: AI_ID,
+    text: input.trim(),
+    createdAt:  new Date().toISOString(),
   };
+
+  setMessages((prev) => [...prev, userMessage]);
+  setInput("");
+
+  setTypingText("");
+
+  // Dispatch user message to DB
+  try {
+    setLoadingResponse(true);
+    const response = await dispatch(
+      sendAIMessage({
+        conversationId: conversation?._id ? conversation._id : null,
+        senderId: currentUser?.user?._id,
+        receiverId: AI_ID,
+        text: userMessage?.text,
+      })
+    ).unwrap();
+  
+
+    aiFullResponse = response?.aiMessage?.text ? response.aiMessage?.text : "AI Does not respond due to some to technical issues. Sorry for inconvenience!"
+   
+
+  } catch (err) {
+
+    console.error("Failed to send user message:", err);
+
+  } finally {
+    setLoadingResponse(false);
+  }
+
+  // AI Simulated Typing Response
+
+
+  // let index = 0;
+  // const typingInterval = setInterval(() => {
+    // if (index < aiFullResponse.length) {
+    //   setTypingText((prev) => prev + aiFullResponse[index]);
+    //   index++;
+    // } else {
+    //   clearInterval(typingInterval);
+    //   setTypingText("");
+
+      const aiMessage = {
+        senderId: AI_ID,
+        receiverId: currentUser?._id,
+        text: aiFullResponse,
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+
+    // }
+  // }, 15);
+};
+
+
+
+   useEffect(() => {
+
+    
+
+      const fetchMessages = async () => {
+        if(!conversation?._id) return
+        try {
+          setIsLoading(true);
+          const response = await dispatch(
+            fetchConversationMessages(conversation?._id)
+          );
+  
+          const data = response?.payload?.messages ?? [];
+          setMessages(data);
+        } catch (error) {
+          console.error("Error fetching messages:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchMessages();
+    }, [dispatch, conversation]);
+
+    console.log(messages)
+
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {(isMobile || isTablet) && (
+      {/* {(isMobile || isTablet) && (
           <button
             onClick={handleBack}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 shadow-md hover:shadow-lg transition duration-200 xs:relative xs:right-2"
@@ -102,17 +174,20 @@ const DevConnectAI = ({handleBack}) => {
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
-        )}
+        )} */}
+
+        <ChatHeaderForAI handleBack={handleBack}/>
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto px-3 md:px-4 py-4 space-y-4 scrollbar-hide">
         {/* Welcome message */}
-        {messages.length === 0 && <DevConnectAIWelcome />}
+        {messages?.length === 0 && <DevConnectAIWelcome />}
 
         {/* Messages */}
-        {messages.map((msg, idx) => (
+        {messages?.map((msg, idx) => (
           <div key={idx}>
-            {msg.sender === "ai" ? (
+            {(msg?.senderId !== currentUser?.user?._id) ? (
               <DevConnectAIBubble text={msg.text} />
+              // <div>hello</div>
             ) : (
               <ChatItem message={msg} isOwnMessage={true} />
             )}

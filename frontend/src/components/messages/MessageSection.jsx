@@ -24,6 +24,8 @@ const MessageSection = () => {
     setSelectedConversation(null);
   };
 
+  console.log(selectedConversation);
+
   // Listen for screen resizing
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
@@ -33,8 +35,6 @@ const MessageSection = () => {
 
   const isMobile = screenWidth < 768;
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
-
-  
 
 
    useEffect(() => {
@@ -74,8 +74,8 @@ const MessageSection = () => {
             : "block"
         } w-full  flex-1 bg-white rounded-xl shadow-md p-4 h-[calc(100vh-6rem)] overflow-y-auto relative bottom-2`}
       >
-        {selectedConversation?.isAI ? (
-          <DevConnectAI handleBack={handleBack} />
+        {(selectedConversation?.isAI==true) ? (
+          <DevConnectAI handleBack={handleBack} conversation={selectedConversation} />
         ) : selectedConversation ? (
           <>
             

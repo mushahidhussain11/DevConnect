@@ -1,6 +1,8 @@
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import mongoose from "mongoose";
+import { getAIResponse } from "../utils/aiAPI.js";
+import "dotenv/config";
 export async function sendMessage(senderId, receiverId, text) {
   console.log(senderId, receiverId, text);
   try {
@@ -82,3 +84,84 @@ export async function getMessagesByConversation(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
+
+export async function  sendAIMessage  (req, res){
+  const { conversationId, senderId,receiverId,  text } = req.body;
+
+
+  const AI_ID = process.env.AI_ID || "64b7f7f96fdd1c0001a0a1a1"
+
+  try {
+
+    let convId = conversationId;
+
+    // Step 1: Create new conversation if not exists
+    let conversation;
+    if (!conversationId) {
+      conversation = new Conversation({
+        members: [senderId, AI_ID],
+        isAI: true,
+      });
+      await conversation.save();
+      convId = conversation._id;
+    } else {
+      conversation = await Conversation.findById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+    }
+
+    
+    let aiMessage = {
+      text: "Daily requests limit has been reached. Please try again tomorrow.",
+    };
+    // Step 3: Get AI response using OpenRouter
+    const aiText = await getAIResponse(text);
+
+    // const aiText = "Response From AI"
+    
+
+    if(!aiText) return res.status(200).json({aiMessage})
+
+    // Step 2: Save user message
+    const userMessage = new Message({
+      conversationId: conversation._id,
+      senderId,
+      receiverId,
+      text,
+    });
+
+    conversation.numberOfMessages = conversation.numberOfMessages + 1;
+     await conversation.save();
+
+    await userMessage.save();
+
+   
+
+    // Step 4: Save AI response
+  aiMessage = new Message({
+      conversationId: conversation._id,
+      senderId: AI_ID,
+      receiverId: senderId,
+      text: aiText,
+    });
+
+    await aiMessage.save();
+
+    // Step 5: Update conversation
+    conversation.numberOfMessages = conversation.numberOfMessages + 1;
+    await conversation.save();
+
+    // Step 5: Send back both messages
+    res.status(200).json({
+      aiMessage,
+    });
+  } catch (error) {
+    console.error("AI Chat Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+
+  
+};
+

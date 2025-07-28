@@ -71,6 +71,22 @@ export const deleteConversation = createAsyncThunk(
 );
 
 
+export const sendAIMessage = createAsyncThunk(
+  "messages/sendAIMessage",
+  async (credentials, thunkAPI) => {
+    try {
+      const response = await messagesService.sendAIMessage(credentials);
+      console.log(response)
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+
 
 
 

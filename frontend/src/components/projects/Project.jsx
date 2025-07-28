@@ -586,7 +586,7 @@ const handleUpdateProject = async (editForm, techStack, tags, imageFiles,removed
 
       {/* Content */}
 
-      <div className="space-y-6 relative top-2 w-full max-w-6xl mx-auto px-3">
+      <div className="space-y-6 relative top-2 mb-6 w-full max-w-6xl mx-auto px-3">
         {/* Title */}
         {project?.title && (
           <div className="flex flex-wrap items-center gap-2">

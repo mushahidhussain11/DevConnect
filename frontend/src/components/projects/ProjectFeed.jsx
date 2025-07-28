@@ -9,6 +9,8 @@ const ProjectFeed = () => {
   const { projects, isLoading } = useSelector((state) => state.projects);
   const { user } = useSelector((state) => state.auth);
 
+  console.log(projects)
+
   console.log(isLoading);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ const ProjectFeed = () => {
     });
   }, [dispatch]);
 
-  console.log(projects);
+
 
   if (isLoading) {
     return Array.from({ length: 5 }).map((_, i) => (

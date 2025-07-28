@@ -6,6 +6,7 @@ import { getAllOtherUsers } from "../../features/user/userSlice";
 import { MessageCircleOffIcon } from "lucide-react";
 import { createConversationWithUser } from "../../features/messages/messagesSlice";
 import LoadingSpinner from "../LoadingSpinner";
+import { toast } from "react-toastify";
 
 import { motion } from "framer-motion";
 
@@ -19,20 +20,41 @@ const ConversationList = ({
   setSelectedConversation,
   setUserConversations,
 }) => {
+
+
+  console.log(userConversations);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConversationCreating, setIsConversationCreating] = useState(false);
-  console.log(userConversations)
+  const [userAIConversation, setUserAIConversation] = useState(null);
+  const [currentUserConversations,setCurrentUserConversations] = useState([]);
+
+
+  useEffect(() => {
+  const aiConv = userConversations?.find((conv) => conv?.isAI == true);
+  setUserAIConversation(aiConv);
+}, [userConversations]);
+
+
+
+
+  useEffect(() => {
+  const convs = userConversations?.filter((conv) => conv?.isAI !== true);
+  setCurrentUserConversations(convs);
+}, [userConversations]);
+
+
+// console.log(userConversations);
+
+
   const aiConversation = {
     id: "ai",
     name: "DevConnect AI",
     isAI: true,
   };
-
-  console.log(selectedConversation, aiConversation);
 
   // Fetch all other users
   useEffect(() => {
@@ -58,7 +80,7 @@ const ConversationList = ({
       conv?.members?.find((member) => member._id === selectedUser._id)
     );
 
-    console.log(existing)
+    console.log(existing);
 
     if (existing) {
       setUserConversations((prev) => [existing, ...prev]);
@@ -81,6 +103,7 @@ const ConversationList = ({
         setUserConversations((prev) => [response?.conversation, ...prev]);
         onSelect(response?.conversation);
       }
+      toast.success("Conversation started successfully");
     } catch (error) {
       console.error("Error starting conversation:", error);
     } finally {
@@ -114,10 +137,20 @@ const ConversationList = ({
             {/* AI conversation pinned */}
             <div className="mb-3">
               <ConversationItem
-                key={aiConversation.id}
-                conversation={aiConversation}
-                onSelect={() => onSelect(aiConversation)}
-                isSelected={selectedConversation?.id === aiConversation.id}
+                key={userAIConversation ? userAIConversation?._id : "ai"}
+                conversation={
+                  userAIConversation ? userAIConversation : aiConversation
+                }
+                onSelect={() =>
+                  onSelect(
+                    userAIConversation ? userAIConversation : aiConversation
+                  )
+                }
+                isSelected={
+                  userAIConversation
+                    ? selectedConversation?._id === userAIConversation._id
+                    : selectedConversation?.id === aiConversation.id
+                }
                 setUserConversations={setUserConversations}
               />
               <div className="border-t border-gray-200 mt-3" />
@@ -125,24 +158,26 @@ const ConversationList = ({
 
             {/* User conversations or fallback */}
             <div className="space-y-2">
-              {userConversations?.length > 0 ? (
-                userConversations?.map((conv) => (
-                  <ConversationItem
-                    key={conv._id}
-                    conversation={conv}
-                    onSelect={() => onSelect(conv)}
-                    isSelected={selectedConversation?._id === conv._id}
-                    setSelectedConversation={setSelectedConversation}
-                    setUserConversations={setUserConversations}
-                  />
-                ))
+              {currentUserConversations?.length > 0 ? (
+                currentUserConversations?.map((conv) => 
+                  (conv.isAI!==true) && (
+                    <ConversationItem
+                      key={conv._id}
+                      conversation={conv}
+                      onSelect={() => onSelect(conv)}
+                      isSelected={selectedConversation?._id === conv._id}
+                      setSelectedConversation={setSelectedConversation}
+                      setUserConversations={setUserConversations}
+                    />
+                  )
+                )
               ) : (
                 <div className="flex flex-col items-center justify-center text-center p-8 rounded-xl border border-gray-200 bg-white/50 dark:bg-gray-800/40 backdrop-blur-lg space-y-4 transition-all duration-300">
                   <div className="bg-gradient-to-tr from-indigo-100 to-indigo-200 text-indigo-600 p-5 rounded-full shadow-md">
                     <MessageCircleOffIcon className="w-8 h-8" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800 dark:text-white tracking-tight">
-                    No Conversations Yet
+                    No User Conversations Yet
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 max-w-xs">
                     Start a new chat and connect with someone today. Your

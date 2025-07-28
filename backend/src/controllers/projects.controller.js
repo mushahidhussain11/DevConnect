@@ -81,7 +81,7 @@ export async function createProject(req, res) {
 
 
 
-    const newProject = await new Project({
+    let newProject = await new Project({
       userId,
       title,
       description,
@@ -97,6 +97,11 @@ export async function createProject(req, res) {
     const user = await User.findById(userId);
     user.numberOfProjects = user.numberOfProjects + 1;
     await user.save();
+
+     newProject = await Project.findById(newProject?._id).populate(
+      "userId",
+      "username fullName role profilePic _id"
+    );
 
     res
       .status(200)

@@ -30,6 +30,17 @@ class MessagesService {
     });
     return res.data;
   }
+
+
+   async sendAIMessage(credentials) {
+    console.log(credentials);
+    const res = await axios.post(`/api/messages/aiMessage`,credentials ,{
+      withCredentials: true,
+    });
+    return res.data;
+  }
+
+  
  
   
 }

@@ -3,6 +3,8 @@ import { formatDistanceToNow } from "date-fns";
 
 const ChatItem = ({ message, isOwnMessage }) => {
 
+ 
+
   const secondsAgo = (Date.now() - new Date(message.createdAt)) / 1000;
 
 const timeLabel =

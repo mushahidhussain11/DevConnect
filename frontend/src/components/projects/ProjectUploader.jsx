@@ -114,7 +114,7 @@ const handleAddItem = (setter, list, value, clearInput) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-3xl mx-auto space-y-6 relative bottom-5">
+    <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-4xl mx-auto space-y-6 relative bottom-5">
       <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
         <FolderKanban className="text-primary-500" size={28} /> Publish a New
         Project

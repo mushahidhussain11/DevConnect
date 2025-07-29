@@ -13,8 +13,6 @@ const ForgotPassword = () => {
     formState: { errors },
   } = useForm();
 
-  
-  
  
 
   const dispatch = useDispatch();

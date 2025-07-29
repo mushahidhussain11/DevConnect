@@ -61,6 +61,8 @@ export async function getUserConversations(req, res) {
 
     conversations = finalConversations;
 
+    console.log(finalConversations)
+
     res
       .status(200)
       .json({ message: "Conversations fetched successfully", conversations });

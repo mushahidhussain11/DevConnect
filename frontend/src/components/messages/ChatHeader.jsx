@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Video, Phone, ArrowLeft } from "lucide-react";
 import { useSelector } from "react-redux";
-import {getLastSeen} from "../../utils/TimeHandler"
+import { getLastSeen } from "../../utils/TimeHandler";
 import { formatDistanceToNow } from "date-fns";
+import CallModal from "./CallModal";
+import { startCall } from "./startCall";
 
 const ChatHeader = ({
   onAudioCall,
@@ -11,8 +13,7 @@ const ChatHeader = ({
   conversation,
   handleBack,
 }) => {
-
-  const {user} = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   const otherUser = conversation?.members?.find(
     (member) => member._id !== user?.user?._id
@@ -21,8 +22,10 @@ const ChatHeader = ({
   const currentChatUserLastSeen = getLastSeen(otherUser?.lastSeen);
   console.log(currentChatUserLastSeen);
 
-
-
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAudio, setIsAudio] = useState(false);
+  const [isVideo, setIsVideo] = useState(false);
+  const [mode, setMode] = useState("outgoing");
 
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
@@ -32,11 +35,23 @@ const ChatHeader = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const onAccept = () => {
+
+
+  };
+
+  const onReject = () => {};
+
+  const onCancel = () => {
+    setIsOpen(false);
+    setIsAudio(false);
+    setIsVideo(false);
+  };
+
   const isMobileOrTablet = screenWidth < 1024;
 
   return (
-   <div className="flex items-center justify-between pl-1 pr-3 py-2 border-b border-gray-200 bg-white sticky top-0 z-10">
-
+    <div className="flex items-center justify-between pl-1 pr-3 py-2 border-b border-gray-200 bg-white sticky top-0 z-10">
       <div className="flex items-center space-x-2">
         {isMobileOrTablet && (
           <button
@@ -59,25 +74,48 @@ const ChatHeader = ({
             {otherUser?.fullName}
           </span>
           <span className="text-xs text-gray-500  max-w-[150px]">
-            {otherUser?.onlineStatus===true ? "Online" : `${currentChatUserLastSeen}`}
+            {otherUser?.onlineStatus === true
+              ? "Online"
+              : `${currentChatUserLastSeen}`}
           </span>
         </div>
       </div>
 
       <div className="flex items-center space-x-2 relative xs:left-3">
         <button
-          onClick={onAudioCall}
+          onClick={() => {
+           
+            setIsOpen(!isOpen);
+            setIsAudio(true);
+           startCall('audio', otherUser?._id, user?.user?.fullName, user?.user?.profilePic);
+          }}
           className="p-2 rounded-full bg-[#EDF1FC] hover:bg-[#e1e8fc] transition"
         >
           <Phone size={16} className="text-[#4C68D5]" />
         </button>
         <button
-          onClick={onVideoCall}
+          onClick={() => {
+           
+            setIsOpen(!isOpen);
+            setIsVideo(true);
+            startCall('video', otherUser?._id, user?.user?.fullName, user?.user?.profilePic);
+            
+          }}
           className="p-2 rounded-full bg-[#EDF1FC] hover:bg-[#e1e8fc] transition"
         >
           <Video size={16} className="text-[#4C68D5]" />
         </button>
       </div>
+
+      <CallModal
+        isOpen={isOpen}
+        type={isAudio ? "Audio" : "Video"}
+        mode={mode}
+        user={{ name: otherUser?.fullName, pic: otherUser?.profilePic}}
+        onCancel={onCancel}
+        onAccept={onAccept}
+        onReject={onReject}
+      />
     </div>
   );
 };

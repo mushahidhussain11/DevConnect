@@ -7,6 +7,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { createSocket } from "./lib/socket";
 import { useSelector } from "react-redux";
+import IncomingCallModal from "./components/messages/IncomingCallModal";
+import { SocketProvider } from "./hooks/SocketContext";
 
 function App() {
 
@@ -43,7 +45,11 @@ useEffect(() => {
 
 
   return (
-    <Router>
+    <SocketProvider>
+
+      <IncomingCallModal />
+
+      <Router>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {routes.map(({ path, element }, index) => (
@@ -52,6 +58,8 @@ useEffect(() => {
         </Routes>
       </Suspense>
     </Router>
+
+    </SocketProvider>
   );
 }
 

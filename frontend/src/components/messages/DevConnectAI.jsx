@@ -67,6 +67,9 @@ const DevConnectAI = ({handleBack,conversation}) => {
   }, [showEmojiPicker]);
 
 
+  let createdConversation = null
+  
+
 
 
   const handleSend = async () => {
@@ -86,6 +89,11 @@ const DevConnectAI = ({handleBack,conversation}) => {
 
   setTypingText("");
 
+  
+
+
+ 
+
   // Dispatch user message to DB
   try {
     setLoadingResponse(true);
@@ -98,7 +106,7 @@ const DevConnectAI = ({handleBack,conversation}) => {
       })
     ).unwrap();
   
-
+   
     aiFullResponse = response?.aiMessage?.text ? response.aiMessage?.text : "AI Does not respond due to some to technical issues. Sorry for inconvenience!"
    
 
@@ -121,6 +129,7 @@ const DevConnectAI = ({handleBack,conversation}) => {
     // } else {
     //   clearInterval(typingInterval);
     //   setTypingText("");
+
 
       const aiMessage = {
         senderId: AI_ID,

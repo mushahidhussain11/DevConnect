@@ -6,10 +6,13 @@ import { deleteConversation } from "../../features/messages/messagesSlice";
 import { getLastSeen } from "../../utils/TimeHandler";
 
 const ConversationItem = ({ conversation, onSelect, onDelete,isSelected,setSelectedConversation,setUserConversations }) => {
+  console.log(conversation)
   const { isAI  } = conversation;
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
+
+  console.log(conversation,isSelected)
   // const [isSelected,setIsSelected] = useState(false)
 
   const otherUser = conversation?.members?.find(

@@ -44,6 +44,7 @@ const MessageSection = () => {
         const response = await dispatch(
           fetchUserConversations(user?.user?._id)
         ).unwrap();
+        console.log(response, response?.conversations);
         setUserConversations(response?.conversations || []);
       } catch (error) {
         console.log("Error fetching conversations:", error);

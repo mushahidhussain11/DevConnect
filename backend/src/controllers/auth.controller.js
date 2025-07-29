@@ -4,17 +4,23 @@ import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie.js";
 import axios from "axios";
 import generateUsername from "../utils/usernameGenerator.js";
+import Conversation from "../models/conversation.model.js";
 import {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
 } from "../nodemailer/emails.js";
 import crypto from "crypto";
-import  cloudinary  from "../utils/cloundinary.config.js"
+import cloudinary from "../utils/cloundinary.config.js";
+import { fileURLToPath } from "url";
+import path from "path";
+import "dotenv/config";
+
+const AI_ID = process.env.AI_ID || "64b7f7f96fdd1c0001a0a1a1";
 
 export async function signup(req, res) {
   const { fullName, username, email, password } = req.body;
 
-  let {profilePic} = req.body;
+  let { profilePic } = req.body;
 
   try {
     if (!fullName || !username || !email || !password) {
@@ -45,9 +51,13 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Username already exists" });
     }
 
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
 
-    const idx = Math.floor(Math.random() * 100) + 1;
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const imagePath = path.join(__dirname, "../../assets/profilePic.png");
+
+    const uploadedResponse = await cloudinary.uploader.upload(imagePath);
+    const randomAvatar = uploadedResponse.secure_url;
 
     const newUser = await User.create({
       fullName,
@@ -63,6 +73,14 @@ export async function signup(req, res) {
     const responseUser = newUser.toObject();
     delete responseUser.password;
 
+    const conversation = await Conversation.create({
+      members: [newUser._id, AI_ID],
+    });
+    conversation?.createdBy?.push(newUser?._id);
+    conversation.isAI = true;
+
+    await conversation.save();
+
     res.status(201).json({
       success: true,
       message: "User created successfully",
@@ -75,7 +93,6 @@ export async function signup(req, res) {
 }
 
 export async function login(req, res) {
-
   const { email, password } = req.body;
 
   try {
@@ -85,8 +102,8 @@ export async function login(req, res) {
 
     const user = await User.findOne({ email });
 
-    if(user?.googleId || user?.facebookId) return res.status(400).json({message:"Login with google or facebook"});
-
+    if (user?.googleId || user?.facebookId)
+      return res.status(400).json({ message: "Login with google or facebook" });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -98,11 +115,7 @@ export async function login(req, res) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    
-
     generateTokenAndSetCookie(user, res);
-
-    
 
     const responseUser = user.toObject();
     delete responseUser.password;
@@ -144,7 +157,6 @@ export async function forgotPassword(req, res) {
 
     await user.save();
 
-    
     const response = await sendPasswordResetEmail(
       user.email,
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`
@@ -152,7 +164,7 @@ export async function forgotPassword(req, res) {
 
     res
       .status(200)
-      .json({ message: "Password reset token sent to your email",response });
+      .json({ message: "Password reset token sent to your email", response });
   } catch (error) {
     console.log("Error in forgotPassword controller", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -182,9 +194,6 @@ export async function resetPassword(req, res) {
     }
 
     // update password
-    
-
-   
 
     user.password = password;
     user.resetPasswordToken = undefined;
@@ -219,11 +228,9 @@ export async function socialAuth(req, res) {
     }
 
     if (provider == "google") {
-      
       // Verify Google token
       try {
-
-      const googleRes = await axios.get(
+        const googleRes = await axios.get(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
             headers: {
@@ -234,50 +241,50 @@ export async function socialAuth(req, res) {
 
         const payload = googleRes.data;
 
-      
-      const username = generateUsername(payload.name, payload.email);
+        const username = generateUsername(payload.name, payload.email);
 
-      if(payload?.picture){
-        const uploadedResponse = await cloudinary.uploader.upload(payload.picture);
-			  img = uploadedResponse.secure_url;
-      }
+        if (payload?.picture) {
+          const uploadedResponse = await cloudinary.uploader.upload(
+            payload.picture
+          );
+          img = uploadedResponse.secure_url;
+        }
 
-      userInfo = {
-        username,
-        email: payload.email,
-        fullName: payload.name,
-        profilePic: img,
-        googleId: payload.sub,
-      };
-
+        userInfo = {
+          username,
+          email: payload.email,
+          fullName: payload.name,
+          profilePic: img,
+          googleId: payload.sub,
+        };
       } catch (error) {
         console.log("Error in google auth", error);
         res.status(401).json({ message: "Invalid or Expire Token" });
-
       }
     } else if (provider == "facebook") {
       // Verify Facebook Token
       try {
         const fbRes = await axios.get(
-        `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${token}`
-      );
+          `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${token}`
+        );
 
-      const fbData = fbRes.data;
+        const fbData = fbRes.data;
 
-      if(fbData?.picture?.data?.url){
-        const uploadedResponse = await cloudinary.uploader.upload(fbData.picture.data.url);
-        img = uploadedResponse.secure_url;
-      }
-      const username = generateUsername(fbData.name, fbData.email);
+        if (fbData?.picture?.data?.url) {
+          const uploadedResponse = await cloudinary.uploader.upload(
+            fbData.picture.data.url
+          );
+          img = uploadedResponse.secure_url;
+        }
+        const username = generateUsername(fbData.name, fbData.email);
 
-      userInfo = {
-        email: fbData.email,
-        username,
-        fullName: fbData.name,
-        profilePic: img,
-        facebookId: fbData.id,
-      };
-
+        userInfo = {
+          email: fbData.email,
+          username,
+          fullName: fbData.name,
+          profilePic: img,
+          facebookId: fbData.id,
+        };
       } catch (error) {
         console.log("Error in facebook auth", error);
         res.status(401).json({ message: "Invalid or Expired Token" });
@@ -290,6 +297,15 @@ export async function socialAuth(req, res) {
 
     if (!user) {
       const newUser = await User.create(userInfo);
+
+      const conversation = await Conversation.create({
+        members: [newUser._id, AI_ID],
+      });
+      conversation?.createdBy?.push(newUser?._id);
+      conversation.isAI = true;
+
+      await conversation.save();
+
       responseUser = newUser.toObject();
     }
 
@@ -312,15 +328,15 @@ export async function socialAuth(req, res) {
 export async function logout(req, res) {
   console.log("logout");
   res.clearCookie("jwt", {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // must match
-  sameSite: "strict",                            // must match
-});
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // must match
+    sameSite: "strict", // must match
+  });
   console.log("bbefore sending response logout");
   res.status(200).json({ message: "Logout successful" });
 }
 
-export async function getMe(req,res) {
+export async function getMe(req, res) {
   const userId = req.user?._id;
   try {
     const user = await User.findById(userId).select("-password");

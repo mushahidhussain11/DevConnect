@@ -96,6 +96,8 @@ export async function  sendAIMessage  (req, res){
 
     let convId = conversationId;
 
+    console.log(conversationId)
+
     // Step 1: Create new conversation if not exists
     let conversation;
     if (!conversationId) {
@@ -156,6 +158,7 @@ export async function  sendAIMessage  (req, res){
     // Step 5: Send back both messages
     res.status(200).json({
       aiMessage,
+      conversation
     });
   } catch (error) {
     console.error("AI Chat Error:", error);

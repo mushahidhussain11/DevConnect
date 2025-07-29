@@ -32,12 +32,13 @@ const ConversationList = ({
   const [userAIConversation, setUserAIConversation] = useState(null);
   const [currentUserConversations,setCurrentUserConversations] = useState([]);
 
+  console.log(userConversations)
+
 
   useEffect(() => {
   const aiConv = userConversations?.find((conv) => conv?.isAI == true);
   setUserAIConversation(aiConv);
 }, [userConversations]);
-
 
 
 
@@ -50,11 +51,11 @@ const ConversationList = ({
 // console.log(userConversations);
 
 
-  const aiConversation = {
-    id: "ai",
-    name: "DevConnect AI",
-    isAI: true,
-  };
+  // const aiConversation = {
+  //   id: "ai",
+  //   name: "DevConnect AI",
+  //   isAI: true,
+  // };
 
   // Fetch all other users
   useEffect(() => {
@@ -136,23 +137,19 @@ const ConversationList = ({
           <div>
             {/* AI conversation pinned */}
             <div className="mb-3">
-              <ConversationItem
-                key={userAIConversation ? userAIConversation?._id : "ai"}
-                conversation={
-                  userAIConversation ? userAIConversation : aiConversation
-                }
+              { userAIConversation && (
+                <ConversationItem
+                key={ userAIConversation?._id}
+                conversation={userAIConversation}
                 onSelect={() =>
-                  onSelect(
-                    userAIConversation ? userAIConversation : aiConversation
-                  )
+                  onSelect(userAIConversation)
                 }
-                isSelected={
-                  userAIConversation
-                    ? selectedConversation?._id === userAIConversation._id
-                    : selectedConversation?.id === aiConversation.id
-                }
+                isSelected={selectedConversation?._id === userAIConversation?._id}
                 setUserConversations={setUserConversations}
               />
+              )
+
+              }
               <div className="border-t border-gray-200 mt-3" />
             </div>
 

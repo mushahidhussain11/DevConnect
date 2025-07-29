@@ -68,11 +68,11 @@ export async function socketHandlers(socket, io) {
   });
 
     // Handle call initiation
-  socket.on("call-user", ({ to, offer }) => {
+  socket.on("call-user", ({ to, offer,type,name,profile }) => {
     console.log("to"  ,to)
     const targetSocketId = onlineUsers.get(to);
     if (targetSocketId) {
-      io.to(targetSocketId).emit("incoming-call", { from: socket.id, offer });
+      io.to(targetSocketId).emit("incoming-call", { from: socket.id, offer,type,name,profile });
       console.log(`📞 Call offer sent from ${socket.id} to ${targetSocketId}`);
     }
   });
@@ -105,6 +105,11 @@ export async function socketHandlers(socket, io) {
       console.error('Error saving call log:', error);
     }
   });
+
+  socket.on("reject-call", ({ to }) => {
+    io.to(to).emit("call-rejected");
+    console.log(`🚫 Call rejected, relayed to ${to}`);
+  })
 
   socket.on("disconnect", () => {
 
